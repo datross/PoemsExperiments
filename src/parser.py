@@ -1,3 +1,5 @@
+import io
+
 class Word :
 	def __init__(self, word, nature, synonyms) : 
 		self.word = word
@@ -21,38 +23,37 @@ class Word :
 
 
 def parseDicoSyno(path):
-	file = open(path)
-	raw = file.readlines()
+	with io.open(path,'r',encoding='utf8') as file:
+		raw = file.readlines()
 	#raw.r
 
-	dico = {}
+		dico = {}
+		word = ""
+		#ajout de tous les mots du dico
+		for i in range(1, len(raw)):
+			if len(raw[i]) < 1:
+				return
 
-	#ajout de tous les mots du dico
-	for i in range(1, len(raw), 2):
-		if len(raw[i]) < 1:
-			return
+			line = str(raw[i].replace('\n', ''))
+			if line[-2] == '1':
+				word = line.split("|")[0]
+			else :
+				line = line.split("|")
+				nature = str(line[0])
+				nature = nature[1:-1]
+				nature.lower()
+				synonyms = line[1:]
 
-		#a un moment le sens s'inverse et les mots deviennent les natures
-		line = str(raw[i].encode('UTF-8'))
-		word = line.split("|")[0]
-		line = str(raw[i+1].encode('UTF-8'))
-		line = line.split('|')
-		nature = str(line[0])
-		nature = nature[3:-1]
-		nature.lower()
-		print(nature)
-		synonyms = line[1:]
+				w = Word(word, nature, synonyms)
+				dico[word] = w
+			
 
-		# w = Word(word, nature, synonyms)
-		# dico[word] = w
-		
+		#ajout de tous les synomymes de chaque mot
+		for words in dico.values():
+			words.toString()
+			words.findSynonyms(dico)
 
-	#ajout de tous les synomymes de chaque mot
-	for words in dico.values():
-		words.toString()
-		words.findSynonyms(dico)
-
-	return dico
+		return dico
 
 
 dico = parseDicoSyno('./synonymes.dat')
