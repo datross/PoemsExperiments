@@ -13,9 +13,9 @@ def loadPoems():
     poems = []
     for i, path in enumerate(glob.glob("../res/poems/*")):
         file = open(path, "r")
-        poem = file.read();
+        poem = file.read()
         poems.append(poem)
-        poemIDs.append(i);
+        poemIDs.append(i)
         words =  re.findall(r"[\w']+", poem)
         for w in words:
             if w:
@@ -39,7 +39,8 @@ mot = u'elle'
 
 vec = CountVectorizer()#strip_accents='unicode'
 X = vec.fit_transform(poems)#mappedWords.keys()
-wantedWords = ["large", "infini", "interminable", "allongé", "long", "carré", "rangé", "boite", "cadre", "quadrilatère"];
+#wantedWords = ["large", "infini", "interminable", "allongé", "long", "carré", "rangé", "boite", "cadre", "quadrilatère"];
+wantedWords = ["large", "joie", "amour", "allongé", "sexe", "carré", "rangé", "boite", "cadre", "quadrilatère"];
 wantedWordsConcat = []
 wantedWordsConcat.append(' '.join(wantedWords))
 
