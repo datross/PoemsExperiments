@@ -1,0 +1,33 @@
+
+src/shape_caracteristics.py,367
+from cmath import phasephase1,0
+import numpy as npnp2,24
+def square_distance_pairs(points):square_distance_pairs5,45
+def average_1d(values):average_1d13,247
+def average_nd(values):average_nd17,315
+def circular_order(points):circular_order21,390
+def distance_regularity(points):distance_regularity26,489
+def describe_shape(points):describe_shape30,560
+
+src/main.py,1113
+import rere3,39
+from sklearn.feature_extraction.text import CountVectorizerCountVectorizer4,49
+from sklearn.feature_extraction.text import TfidfTransformerTfidfTransformer5,109
+from sklearn.naive_bayes import MultinomialNBMultinomialNB6,170
+import globglob7,216
+mappedWords = {}mappedWords9,229
+poemIDs = []poemIDs10,246
+def loadPoems():loadPoems13,261
+poems = loadPoems()poems27,611
+def initVectorisers():initVectorisers30,633
+mot = u'elle'mot44,1010
+vec = CountVectorizer()  # strip_accents='unicode'vec46,1025
+X = vec.fit_transform(poems)  # mappedWords.keys()X47,1076
+wantedWords = ["large", "infini", "interminable", "allongé", "long", "carré",wantedWords48,1127
+wantedWordsConcat = []wantedWordsConcat50,1267
+tf_transformer = TfidfTransformer(use_idf=False).fit(X)tf_transformer55,1365
+clf = MultinomialNB().fit(X, poemIDs)clf61,1600
+X_new_counts = vec.transform(wantedWordsConcat)X_new_counts63,1639
+X_new_tfidf = tf_transformer.transform(X_new_counts)X_new_tfidf64,1687
+predicted = clf.predict(X_new_tfidf)predicted66,1741
+def getWordFreq(w):getWordFreq74,1888
