@@ -6,38 +6,38 @@ import matplotlib.pyplot as plt
 WIDTH = 32
 HEIGHT = 32
 
+
 def airePoly(coord):
-    nb = len(coord[0])
     sum = 0
-    for i in range(nb-1):
-        # sum += coord[0][i]*coord[1][i+1] - coord[0][i+1]*coord[1][i]
-        sum += (coord[0][i+1] + coord[0][i]) * (coord[1][i+1] - coord[1][i])
+    for i in range(len(coord[0])):
+        k = (i + 1) % len(coord[0])
+        sum += coord[0][i] * coord[1][k] - coord[0][k] * coord[1][i]
+    return abs(sum) * 0.5
 
-    return abs(sum)*0.5
 
-
+# pour la postérité
 def aireTriangleGenerique(coord):
     nb = len(coord[0])
     sum = 0
     for i, x in enumerate(coord[0]):
         sub = 0
-        if i%2 == 0: 
+        if i % 2 == 0:
             ys = reversed(coord[1])
-            excluIndex = nb-1-i 
+            excluIndex = nb - 1 - i
         else:
             ys = coord[1]
-            excluIndex = i 
+            excluIndex = i
 
         cpt = 0
         for j, y in enumerate(ys):
             if j != excluIndex:
-                if cpt%2 == 0 :   
-                    sub += x*y 
+                if cpt % 2 == 0:
+                    sub += x * y
                 else:
-                    sub -= x*y
-                cpt+=1
+                    sub -= x * y
+                cpt += 1
         sum += sub
-    return 0.5*abs(sum)
+    return 0.5 * abs(sum)
 
 
 def aireTriangle(coord):
@@ -48,11 +48,13 @@ def aireTriangle(coord):
     yb = coord[1][1]
     yc = coord[1][2]
 
-    sum = xa*yc - xa*yb + xb*ya - xb*yc + xc*yb - xc*ya
+    sum = xa * yc - xa * yb + xb * ya - xb * yc + xc * yb - xc * ya
     return 0.5 * abs(sum)
 
+
 def random(a, b):
-    return (b-a) * np.random.random() + a
+    return (b - a) * np.random.random() + a
+
 
 def generateFromShape(shape):
     X = []
@@ -93,7 +95,7 @@ def generateFromShape(shape):
     image[rasterized[0], rasterized[1]] = 1.
 
     # plt.imshow(image)
-    # plt.show() 
+    # plt.show()
 
     # rotateCoordinates = np.dot(coordinates,rotate)
     # rotateRasterized = draw.polygon(rotateCoordinates[0], rotateCoordinates[1])
@@ -101,8 +103,7 @@ def generateFromShape(shape):
     # rotateImage[rotateRasterized[0], rotateRasterized[1]] = 1.
 
     # plt.imshow(rotateImage)
-    # plt.show() 
-    
+    # plt.show()
 
     return image
 
@@ -121,7 +122,6 @@ def displayShapes(shape, n):
 
 
 # generateFromShape("triangle")
-
 
 # test d'apprentissage
 
@@ -151,3 +151,4 @@ for i in range(nb_test):
 
 score /= nb_test
 print("Score sur " + str(nb_test) + " samples : " + str(score))
+
