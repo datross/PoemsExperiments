@@ -3,8 +3,29 @@ from skimage import draw
 import numpy as np
 import matplotlib.pyplot as plt
 
-WIDTH = 32
-HEIGHT = 32
+
+# fonctions utilitaires généralistes
+
+
+def random(a, b):
+    return (b - a) * np.random.random() + a
+
+
+# fonctions d'analyse d'une forme
+
+
+def boundingBox(coords):
+    """Retourne (xmin, ymin, xmax, ymax)"""
+    xmin = coords[0][0]
+    xmax = coords[0][0]
+    ymin = coords[1][0]
+    ymax = coords[1][0]
+    for (x, y) in zip(*coords):
+        xmin = min(xmin, x)
+        xmax = max(xmax, x)
+        ymin = min(ymin, y)
+        ymax = max(ymax, y)
+    return (xmin, ymin, xmax, ymax)
 
 
 def airePoly(coord):
@@ -15,8 +36,8 @@ def airePoly(coord):
     return abs(sum) * 0.5
 
 
-# pour la postérité
 def aireTriangleGenerique(coord):
+    """Pour la postérité"""
     nb = len(coord[0])
     sum = 0
     for i, x in enumerate(coord[0]):
@@ -40,70 +61,129 @@ def aireTriangleGenerique(coord):
     return 0.5 * abs(sum)
 
 
-def aireTriangle(coord):
-    xa = coord[0][0]
-    xb = coord[0][1]
-    xc = coord[0][2]
-    ya = coord[1][0]
-    yb = coord[1][1]
-    yc = coord[1][2]
-
-    sum = xa * yc - xa * yb + xb * ya - xb * yc + xc * yb - xc * ya
-    return 0.5 * abs(sum)
+# Formes canoniques
 
 
-def random(a, b):
-    return (b - a) * np.random.random() + a
+def canoniqueCarre():
+    return ([-0.5, 0.5, 0.5, -0.5], [-0.5, -0.5, 0.5, 0.5])
+
+
+def canoniqueTriangle():
+    # aire triangle équilatéral de côté a :
+    # aire(a) = a**2 * sqrt(3)/2 = a**2 * 0.8660254037844386
+    # aire(a) = 1 => a = 1.07456993182354
+    a = 1.07456993182354
+    h = 0.9306048591020996
+    return ([-a/2, a/2, 0], [-h/3, -h/3, 2*h/3])
+
+
+# Fonctions de transformation d'une forme
+
+def rotate(coords, angle, pivot=(0, 0)):
+    """Effets de bord, ça change coords et le retourne aussi."""
+    c = np.cos(angle)
+    s = np.sin(angle)
+    for i in range(len(coords[0])):
+        _x = coords[0][i] - pivot[0]
+        _y = coords[1][i] - pivot[1]
+        coords[0][i] = _x*c - s*_y + pivot[0]
+        coords[1][i] = _x*s + c*_y + pivot[1]
+    return coords
+
+
+def scale(coords, factor, pivot=(0, 0)):
+    """Effets de bord, ça change coords et le retourne aussi."""
+    for i in range(len(coords[0])):
+        _x = coords[0][i] - pivot[0]
+        _y = coords[1][i] - pivot[1]
+        coords[0][i] = _x*factor + pivot[0]
+        coords[1][i] = _y*factor + pivot[1]
+    return coords
+
+
+def displace(coords, displacement):
+    """displacement peut être un tuple (x, y) ou alors une liste de tuples.
+    Effets de bord, ça change coords et le retourne aussi."""
+    if type(displacement) != list:
+        displacement = [displacement] * len(coords[0])
+    for i in range(len(coords[0])):
+        coords[0][i] += displacement[i][0]
+        coords[1][i] += displacement[i][1]
+    return coords
+
+
+def scaleInLimits(coords, xmax, ymax, aire_min):
+    """Scale la forme en la gardant dans les limites."""
+    bb = boundingBox(coords)
+    w = bb[2] - bb[0]
+    h = bb[3] - bb[1]
+    aire = airePoly(coords)
+    scale_min = np.sqrt(aire_min / aire)
+    scale_max = min(xmax / w, ymax / h)
+    scale_factor = random(scale_min, scale_max)
+    scale(coords, scale_factor)
+    return coords
+
+
+def translateInLimits(coords, xmax, ymax):
+    """Place la forme en restant dans le cadre donné."""
+    bb = boundingBox(coords)
+    txmin = 0 - bb[0]
+    txmax = xmax - bb[2]
+    tymin = 0 - bb[1]
+    tymax = ymax - bb[3]
+    t = (random(txmin, txmax), random(tymin, tymax))
+    displace(coords, t)
+    return coords
+
+
+# génération des formes
+
+
+def generateRandomCarre(xmax, ymax, aire_min=9):
+    """Génère un carré aléatoire générique dans les limites fixées.
+    Attention, les positions sont en float."""
+    carre = canoniqueCarre()
+    # rotation aléatoire
+    rotate(carre, random(0, 2*np.pi))
+    # scale aléatoire avec boundingBox plus petite inférieure aux limites
+    scaleInLimits(carre, xmax, ymax, aire_min)
+    # placement aléatoire dans la frame
+    translateInLimits(carre, xmax, ymax)
+    # enfin on a notre carre
+    return carre
+
+
+def generateRandomTriangle(xmax, ymax, aire_min=9):
+    """Génère un triangle aléatoire générique dans les limites fixées.
+    Attention, les positions sont en float."""
+    triangle = canoniqueTriangle()
+    # rotation aléatoire
+    rotate(triangle, random(0, 2*np.pi))
+    # scale aléatoire avec boundingBox plus petite inférieure aux limites
+    scaleInLimits(triangle, xmax, ymax, aire_min)
+    # placement aléatoire dans la frame
+    translateInLimits(triangle, xmax, ymax)
+    # enfin on a notre triangle
+    return triangle
+
+
+WIDTH = 128
+HEIGHT = 128
 
 
 def generateFromShape(shape):
-    X = []
-    Y = []
+    coords = ([], [])
 
     if shape == "carre":
-        size = np.random.randint(2, min(WIDTH, HEIGHT))
-        # angle = np.random()*2*np.pi
-        # theta = np.radians(angle)
-        # c, s = np.cos(theta), np.sin(theta)
-        # rotate = np.array(((c,-s), (s, c)))
-        # size = random(0, min(WIDTH, HEIGHT) / ((np.sinus(np.pi*0.25 + theta) - 1.41421356237 / 2)*2))
-        x = np.random.randint(0, WIDTH - size)
-        y = np.random.randint(0, HEIGHT - size)
-        X += [x, x, x+size, x+size]
-        Y += [y, y+size, y+size, y]
-        #pivot = np.array()
-        # print("air : "+str(size*size))
-        # aireP = airePoly((X, Y))
-        # print(aireP)
+        coords = generateRandomCarre(WIDTH, HEIGHT)
 
     if shape == "triangle":
-        aire = 0
-        while aire < 0.03 * WIDTH * HEIGHT:
-            X = []
-            Y = []
-            for i in range(3):
-                X += [np.random.randint(0, WIDTH)]
-                Y += [np.random.randint(0, HEIGHT)]
-            aire = aireTriangle((X, Y))
-        # aireP = aireTriangleGenerique((X, Y))
-        # print(aire)
-        # print(aireP)
+        coords = generateRandomTriangle(WIDTH, HEIGHT)
 
-    coordinates = (Y, X)
     image = np.zeros((HEIGHT, WIDTH))
-    rasterized = draw.polygon(coordinates[0], coordinates[1])
+    rasterized = draw.polygon(coords[0], coords[1])
     image[rasterized[0], rasterized[1]] = 1.
-
-    # plt.imshow(image)
-    # plt.show()
-
-    # rotateCoordinates = np.dot(coordinates,rotate)
-    # rotateRasterized = draw.polygon(rotateCoordinates[0], rotateCoordinates[1])
-    # rotateImage = np.zeros((HEIGHT, WIDTH))
-    # rotateImage[rotateRasterized[0], rotateRasterized[1]] = 1.
-
-    # plt.imshow(rotateImage)
-    # plt.show()
 
     return image
 
@@ -120,35 +200,34 @@ def displayShapes(shape, n):
         plt.show()
 
 
-
-# generateFromShape("triangle")
+displayShapes("carre", 10)
 
 # test d'apprentissage
 
-nb_train = 50000
-forme_names = ["carre", "triangle"]
-formes = np.random.randint(0, 2, nb_train, dtype=int)
-X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-Y = np.array([float(formes[i]) for i in range(nb_train)])
+# nb_train = 50000
+# forme_names = ["carre", "triangle"]
+# formes = np.random.randint(0, 2, nb_train, dtype=int)
+# X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+# Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                    verbose=True)
-clf.fit(X, Y)
-score = 0
-nb_test = 2000
-for i in range(nb_test):
-    forme = np.random.randint(0, 2, dtype=int)
-    image = generateFromShape(forme_names[forme])
-    result = clf.predict([reformatImage(image)])
-    if int(round(result[0])) == forme:
-        score += 1.
-    # plt.imshow(image)
-    # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-    # plt.show()
+# clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+#                     hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+#                     verbose=True)
+# clf.fit(X, Y)
+# score = 0
+# nb_test = 2000
+# for i in range(nb_test):
+#     forme = np.random.randint(0, 2, dtype=int)
+#     image = generateFromShape(forme_names[forme])
+#     result = clf.predict([reformatImage(image)])
+#     if int(round(result[0])) == forme:
+#         score += 1.
+#     # plt.imshow(image)
+#     # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
+#     # plt.show()
 
 
-score /= nb_test
-print("Score sur " + str(nb_test) + " samples : " + str(score))
+# score /= nb_test
+# print("Score sur " + str(nb_test) + " samples : " + str(score))
 
