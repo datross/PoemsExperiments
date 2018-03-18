@@ -18,7 +18,6 @@ class Word:
             # nature dans le dico pour le link
             if not (s in dico):
                 w = Word(s, "?", findSynonyms(s, dico))
-                print(w.__str__())
                 dico[s] = w
             s = dico[s]
 
@@ -66,6 +65,11 @@ def findSynonyms(word, dico):
 #             words.findSynonyms(dico)
 
 #         return dico
+def cleanWord(w):
+    word = w.replace('\n', "")
+    word = word.split('(')[0]
+    word = word.strip()
+    return word
 
 def parseDicoSyno(path):
     with open(path, 'r', encoding='utf8') as file:
@@ -86,7 +90,7 @@ def parseDicoSyno(path):
             # on ajoute un Word dans le dico
             elif line[0] == '(':
                 nature = tokens[0].replace('(', '').replace(')', '').lower()
-                synonyms = [s.replace('\n', "") for s in tokens[1:]]
+                synonyms = [cleanWord(s) for s in tokens[1:]]
                 dico[current_word] = Word(current_word, nature, synonyms)
 
         # deuxieme pour le link des synonymes
@@ -96,6 +100,7 @@ def parseDicoSyno(path):
 
 dico = parseDicoSyno('../res/dico/synonymes.dat')
 
+print(len(dico))
 i = 0   
 for (key, val) in dico.items():
     i += 1
