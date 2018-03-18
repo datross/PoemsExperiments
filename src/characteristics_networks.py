@@ -70,22 +70,22 @@ def generateFromShape(shape):
         X += [x, x, x+size, x+size]
         Y += [y, y+size, y+size, y]
         #pivot = np.array()
-        print("air : "+str(size*size))
-        aireP = airePoly((X, Y))
-        print(aireP)
+        # print("air : "+str(size*size))
+        # aireP = airePoly((X, Y))
+        # print(aireP)
 
     if shape == "triangle":
-        # aire = 0
-        # while aire < 0.03 * WIDTH * HEIGHT:
-        X = []
-        Y = []
-        for i in range(3):
-            X += [np.random.randint(0, WIDTH)]
-            Y += [np.random.randint(0, HEIGHT)]
-        aire = aireTriangle((X, Y))
-        aireP = aireTriangleGenerique((X, Y))
-        print(aire)
-        print(aireP)
+        aire = 0
+        while aire < 0.03 * WIDTH * HEIGHT:
+            X = []
+            Y = []
+            for i in range(3):
+                X += [np.random.randint(0, WIDTH)]
+                Y += [np.random.randint(0, HEIGHT)]
+            aire = aireTriangle((X, Y))
+        # aireP = aireTriangleGenerique((X, Y))
+        # print(aire)
+        # print(aireP)
 
     coordinates = (Y, X)
     image = np.zeros((HEIGHT, WIDTH))
@@ -120,34 +120,34 @@ def displayShapes(shape, n):
 
 
 
-generateFromShape("triangle")
+# generateFromShape("triangle")
 
 
 # test d'apprentissage
 
-# nb_train = 20000
-# forme_names = ["carre", "triangle"]
-# formes = np.random.randint(0, 2, nb_train, dtype=int)
-# X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-# Y = np.array([float(formes[i]) for i in range(nb_train)])
+nb_train = 50000
+forme_names = ["carre", "triangle"]
+formes = np.random.randint(0, 2, nb_train, dtype=int)
+X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
-# clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-#                     hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-#                     verbose=True)
-# clf.fit(X, Y)
-# score = 0
-# nb_test = 20000
-# for i in range(nb_test):
-#     forme = np.random.randint(0, 2, dtype=int)
-#     image = generateFromShape(forme_names[forme])
-#     result = clf.predict([reformatImage(image)])
-#     if int(round(result[0])) == forme:
-#         score += 1.
-#     # plt.imshow(image)
-#     # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-#     # plt.show()
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+                    verbose=True)
+clf.fit(X, Y)
+score = 0
+nb_test = 2000
+for i in range(nb_test):
+    forme = np.random.randint(0, 2, dtype=int)
+    image = generateFromShape(forme_names[forme])
+    result = clf.predict([reformatImage(image)])
+    if int(round(result[0])) == forme:
+        score += 1.
+    # plt.imshow(image)
+    # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
+    # plt.show()
 
 
-# score /= nb_test
-# print("Score sur " + str(nb_test) + " samples : " + str(score))
+score /= nb_test
+print("Score sur " + str(nb_test) + " samples : " + str(score))
