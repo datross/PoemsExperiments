@@ -11,15 +11,29 @@ class Word:
         #     self.synonyms.append(w)
 
     def linkSynonyms(self, dico):
+
         for s in self.synonyms:
             # si le synonyme n'est pas dans le dico
             # on cree un Word sans synonyme et sans
             # nature dans le dico pour le link
-            if #TODO
+            if not (s in dico):
+                w = Word(s, "?", findSynonyms(s, dico))
+                print(w.__str__())
+                dico[s] = w
             s = dico[s]
 
+
     def __str__(self):
-        return self.word + " (" + self.nature + ") : "
+        sys = ', '.join(self.synonyms)
+        return str(self.word) + " (" + str(self.nature) + ") : " + sys
+
+
+def findSynonyms(word, dico):
+    syno = []
+    for (key, val) in dico.items():
+        if word in val.synonyms:
+            syno.append(key)
+    return syno
 
 
 # def parseDicoSyno(path):
@@ -57,35 +71,34 @@ def parseDicoSyno(path):
     with open(path, 'r', encoding='utf8') as file:
         lines = file.readlines()
         dico = {}
-        current_word = 0
+        current_word = ""
 
         # premiere passe pour les mots
         for line in lines:
             tokens = line.split('|')
             # on passe a la ligne suivante si y a rien
-            if len(tokens) <= 2:
+            if len(tokens) < 2:
                 continue
             # si c'est une key on ecrase l'ancienne
-            if tokens[1] == '1':
+            if tokens[1].replace('\n', "") == "1":
                 current_word = tokens[0]
             # si c'est une ligne de synonymes
             # on ajoute un Word dans le dico
             elif line[0] == '(':
                 nature = tokens[0].replace('(', '').replace(')', '').lower()
-                synonyms = tokens[1:]
+                synonyms = [s.replace('\n', "") for s in tokens[1:]]
                 dico[current_word] = Word(current_word, nature, synonyms)
 
         # deuxieme pour le link des synonymes
-        for words in dico.values():
-            words.findSynonyms(dico)
-
+        for i in list(dico):
+           dico[i].linkSynonyms(dico)
         return dico
 
-dico = parseDicoSyno('/mnt/data/school/creative IA/thesorus_synonymes/thes_fr.dat')
+dico = parseDicoSyno('../res/dico/synonymes.dat')
 
-i = 0
+i = 0   
 for (key, val) in dico.items():
     i += 1
     if i > 10:
-        exit
-    print(key + " =>  " + val.__str__())
+        exit()
+    # print(str(key) + " =>  " + val.__str__())
