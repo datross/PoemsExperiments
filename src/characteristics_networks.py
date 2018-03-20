@@ -3,9 +3,8 @@ from skimage import draw
 import numpy as np
 import matplotlib.pyplot as plt
 
-WIDTH = 32
-HEIGHT = 32
-
+WIDTH = 64
+HEIGHT = 64
 
 def airePoly(coord):
     sum = 0
@@ -13,6 +12,21 @@ def airePoly(coord):
         k = (i + 1) % len(coord[0])
         sum += coord[0][i] * coord[1][k] - coord[0][k] * coord[1][i]
     return abs(sum) * 0.5
+
+def circular_order(coord):
+    points = []
+    newCoord = ([], [])
+    for (x, y) in zip(*coord):
+        points.append((x, y))
+
+    center = np.mean(points, axis=0)
+    points = np.array(sorted(points, key=lambda x: np.angle((x-center)[0]+(x-center)[1]*1j)))
+    
+    for (x, y) in points:
+        newCoord[0].append(x)
+        newCoord[1].append(y)
+
+    return newCoord
 
 
 # pour la postérité
@@ -57,9 +71,7 @@ def random(a, b):
 
 
 def generateFromShape(shape):
-    X = []
-    Y = []
-
+    X = Y = []
     if shape == "carre":
         size = np.random.randint(2, min(WIDTH, HEIGHT))
         # angle = np.random()*2*np.pi
@@ -84,12 +96,23 @@ def generateFromShape(shape):
             for i in range(3):
                 X += [np.random.randint(0, WIDTH)]
                 Y += [np.random.randint(0, HEIGHT)]
-            aire = aireTriangle((X, Y))
+            aire = airePoly((X, Y))
+
+    if shape == "pantagon":
+        aire = 0
+        while aire < 0.03 * WIDTH * HEIGHT:
+            X = []
+            Y = []
+            for i in range(5):
+                X += [np.random.randint(0, WIDTH)]
+                Y += [np.random.randint(0, HEIGHT)]
+
+            aire = airePoly(circular_order((X, Y)))
         # aireP = aireTriangleGenerique((X, Y))
         # print(aire)
         # print(aireP)
 
-    coordinates = (Y, X)
+    coordinates = circular_order((X, Y))
     image = np.zeros((HEIGHT, WIDTH))
     rasterized = draw.polygon(coordinates[0], coordinates[1])
     image[rasterized[0], rasterized[1]] = 1.
@@ -119,36 +142,40 @@ def displayShapes(shape, n):
         plt.imshow(image)
         plt.show()
 
-
-
-# generateFromShape("triangle")
-
 # test d'apprentissage
-
-nb_train = 50000
-forme_names = ["carre", "triangle"]
-formes = np.random.randint(0, 2, nb_train, dtype=int)
-X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-Y = np.array([float(formes[i]) for i in range(nb_train)])
+def learn(nb_train, forme_names, nb_test) :
+    formes = np.random.randint(0, 3, nb_train, dtype=int)
+    X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+    Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                    verbose=True)
-clf.fit(X, Y)
-score = 0
-nb_test = 2000
-for i in range(nb_test):
-    forme = np.random.randint(0, 2, dtype=int)
-    image = generateFromShape(forme_names[forme])
-    result = clf.predict([reformatImage(image)])
-    if int(round(result[0])) == forme:
-        score += 1.
-    # plt.imshow(image)
-    # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-    # plt.show()
+    clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+                        verbose=True)
+    clf.fit(X, Y)
+    score = 0
+    for i in range(nb_test):
+        forme = np.random.randint(0, 3, dtype=int)
+        image = generateFromShape(forme_names[forme])
+        result = clf.predict([reformatImage(image)])
+        if int(round(result[0])) == forme:
+            score += 1.
+        plt.imshow(image)
+        plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
+        plt.show()
 
 
-score /= nb_test
-print("Score sur " + str(nb_test) + " samples : " + str(score))
+    score /= nb_test
+    print("Score sur " + str(nb_test) + " samples : " + str(score))
+
+
+
+nb_train = 10000
+nb_test = 100
+forme_names = ["triangle", "carre", "pantagon"]
+
+# learn(nb_train, forme_names, nb_test)
+image = generateFromShape("pantagon")
+plt.imshow(image)
+plt.show()
 
