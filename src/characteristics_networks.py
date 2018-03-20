@@ -68,13 +68,32 @@ def canoniqueCarre():
     return ([-0.5, 0.5, 0.5, -0.5], [-0.5, -0.5, 0.5, 0.5])
 
 
-def canoniqueTriangle():
+def canoniqueTriangle(fractal=0.):
     # aire triangle équilatéral de côté a :
     # aire(a) = a**2 * sqrt(3)/2 = a**2 * 0.8660254037844386
     # aire(a) = 1 => a = 1.07456993182354
+    # TODO débile ou très débile ?
     a = 1.07456993182354
     h = 0.9306048591020996
-    return ([-a/2, a/2, 0], [-h/3, -h/3, 2*h/3])
+    x_sommet = random(-fractal * 2 * a, fractal * 2 * a)
+    y_sommet = random(-fractal * 0.9 * h, fractal * 0.9 * h)
+    return ([-a/2, a/2, x_sommet], [-h/3, -h/3, 2*h/3 + y_sommet])
+
+
+def canoniqueLosange(fractal=0.):
+    y_sommet = random(-fractal * 0.7, fractal * 0.7)
+    return ([0, 0.5, 0, -0.5],
+            [-0.8 + y_sommet, 0, 0.8 - y_sommet, 0])
+
+
+def canoniqueRectangle(fractal=0.):
+    w = 1.5 + random(-fractal * 0.3, 2 * fractal)
+    return ([0.5*w, 0.5*w, -0.5*w, -0.5*w], [-0.5, 0.5, 0.5, -0.5])
+
+
+def canoniqueFleche(fractal=0.):
+    # TODO action de fractal
+    return ([0, 0.5, 0, -0.5], [-0.2, -0.5, 0.7, -0.5])
 
 
 # Fonctions de transformation d'une forme
@@ -139,33 +158,16 @@ def translateInLimits(coords, xmax, ymax):
 
 # génération des formes
 
-
-def generateRandomCarre(xmax, ymax, aire_min=9):
-    """Génère un carré aléatoire générique dans les limites fixées.
-    Attention, les positions sont en float."""
-    carre = canoniqueCarre()
+def displaceRotateScaleTranslateInFrame(coords, xmax, ymax, aire_min=9):
+    """Comme le om l'indique, fait varier n'importe quelle forme."""
     # rotation aléatoire
-    rotate(carre, random(0, 2*np.pi))
+    rotate(coords, random(0, 2*np.pi))
     # scale aléatoire avec boundingBox plus petite inférieure aux limites
-    scaleInLimits(carre, xmax, ymax, aire_min)
+    scaleInLimits(coords, xmax, ymax, aire_min)
     # placement aléatoire dans la frame
-    translateInLimits(carre, xmax, ymax)
-    # enfin on a notre carre
-    return carre
-
-
-def generateRandomTriangle(xmax, ymax, aire_min=9):
-    """Génère un triangle aléatoire générique dans les limites fixées.
-    Attention, les positions sont en float."""
-    triangle = canoniqueTriangle()
-    # rotation aléatoire
-    rotate(triangle, random(0, 2*np.pi))
-    # scale aléatoire avec boundingBox plus petite inférieure aux limites
-    scaleInLimits(triangle, xmax, ymax, aire_min)
-    # placement aléatoire dans la frame
-    translateInLimits(triangle, xmax, ymax)
-    # enfin on a notre triangle
-    return triangle
+    translateInLimits(coords, xmax, ymax)
+    # enfin on a notre forme
+    return coords
 
 
 WIDTH = 128
@@ -175,11 +177,21 @@ HEIGHT = 128
 def generateFromShape(shape):
     coords = ([], [])
 
-    if shape == "carre":
-        coords = generateRandomCarre(WIDTH, HEIGHT)
-
     if shape == "triangle":
-        coords = generateRandomTriangle(WIDTH, HEIGHT)
+        coords = displaceRotateScaleTranslateInFrame(
+            canoniqueTriangle(fractal=1), WIDTH, HEIGHT)
+    elif shape == "carre":
+        coords = displaceRotateScaleTranslateInFrame(
+            canoniqueCarre(), WIDTH, HEIGHT)
+    elif shape == "rectangle":
+        coords = displaceRotateScaleTranslateInFrame(
+            canoniqueRectangle(fractal=1), WIDTH, HEIGHT)
+    elif shape == "losange":
+        coords = displaceRotateScaleTranslateInFrame(
+            canoniqueLosange(fractal=1), WIDTH, HEIGHT)
+    elif shape == "fleche":
+        coords = displaceRotateScaleTranslateInFrame(
+            canoniqueFleche(fractal=1), WIDTH, HEIGHT)
 
     image = np.zeros((HEIGHT, WIDTH))
     rasterized = draw.polygon(coords[0], coords[1])
@@ -193,41 +205,49 @@ def reformatImage(image):
     return np.ndarray.flatten(image)
 
 
-def displayShapes(shape, n):
+def displayShapes(shapes, n):
     for i in range(n):
-        image = generateFromShape(shape)
+        forme = np.random.randint(0, len(shapes))
+        image = generateFromShape(shapes[forme])
         plt.imshow(image)
+        plt.title(shapes[forme])
         plt.show()
 
 
-displayShapes("carre", 10)
+shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
+# displayShapes(shapes, 20)
+
+
+
+
+
 
 # test d'apprentissage
 
-# nb_train = 50000
-# forme_names = ["carre", "triangle"]
-# formes = np.random.randint(0, 2, nb_train, dtype=int)
-# X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-# Y = np.array([float(formes[i]) for i in range(nb_train)])
+nb_train = 2000
+forme_names = shapes
+formes = np.random.randint(0, 2, nb_train, dtype=int)
+X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
-# clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-#                     hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-#                     verbose=True)
-# clf.fit(X, Y)
-# score = 0
-# nb_test = 2000
-# for i in range(nb_test):
-#     forme = np.random.randint(0, 2, dtype=int)
-#     image = generateFromShape(forme_names[forme])
-#     result = clf.predict([reformatImage(image)])
-#     if int(round(result[0])) == forme:
-#         score += 1.
-#     # plt.imshow(image)
-#     # plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-#     # plt.show()
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+                    verbose=True)
+clf.fit(X, Y)
+score = 0
+nb_test = 20
+for i in range(nb_test):
+    forme = np.random.randint(0, 2, dtype=int)
+    image = generateFromShape(forme_names[forme])
+    result = clf.predict([reformatImage(image)])
+    if int(round(result[0])) == forme:
+        score += 1.
+    plt.imshow(image)
+    plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
+    plt.show()
 
 
-# score /= nb_test
-# print("Score sur " + str(nb_test) + " samples : " + str(score))
+score /= nb_test
+print("Score sur " + str(nb_test) + " samples : " + str(score))
 
