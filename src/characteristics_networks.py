@@ -226,7 +226,7 @@ shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
 
 nb_train = 2000
 forme_names = shapes
-formes = np.random.randint(0, 2, nb_train, dtype=int)
+formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
 X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
 Y = np.array([float(formes[i]) for i in range(nb_train)])
 
@@ -238,7 +238,7 @@ clf.fit(X, Y)
 score = 0
 nb_test = 20
 for i in range(nb_test):
-    forme = np.random.randint(0, 2, dtype=int)
+    forme = np.random.randint(0, len(forme_names), dtype=int)
     image = generateFromShape(forme_names[forme])
     result = clf.predict([reformatImage(image)])
     if int(round(result[0])) == forme:
