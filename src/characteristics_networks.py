@@ -292,9 +292,9 @@ def getOrientation(img):
     return orientations[int(round(result[0]))]
 
 
-nb_train = 200
-nb_test = 20
-learnForm(nb_train)
-testForm(nb_test)
+# nb_train = 200
+# nb_test = 20
+# learnForm(nb_train)
+# testForm(nb_test)
 
 
