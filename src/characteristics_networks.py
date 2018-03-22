@@ -1,3 +1,4 @@
+
 from sklearn.neural_network import MLPClassifier
 from skimage import draw
 import numpy as np
@@ -200,6 +201,11 @@ def generateFromShape(shape):
     return image
 
 
+def generateFromShapeByOrientation(orientation):
+    # TODO générer des formes aléatoire aillant l'orientation demander
+    return
+
+
 def reformatImage(image):
     # return np.reshape(image, (1, image.shape[0] * image.shape[1]))
     return np.ndarray.flatten(image)
@@ -215,39 +221,80 @@ def displayShapes(shapes, n):
 
 
 shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
+orientations = ["droit", "oblique"]
+clfForm = None
+clfOrientation = None
 # displayShapes(shapes, 20)
 
+# fonction d'apprentissage
+def learnForm(nb_train):
+    global clfForm
+    global shapes
+    forme_names = shapes
+    formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
+    X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+    Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
+    clfForm = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+                        verbose=True)
+    clfForm.fit(X, Y)
 
+
+def learnOrientation(nb_train):
+    global clfOrientation
+    global orientations
+
+    orientations_name = orientations
+    orients = np.random.randint(0, len(orientations_name), nb_train, dtype=int)
+    # TODO  appel a générate shape by rotation
+    X = np.array([reformatImage(generateFromShape(orientations_name[orients[i]])) for i in range(nb_train)])
+    Y = np.array([float(orients[i]) for i in range(nb_train)])
+
+
+    clfOrientation = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+                        verbose=True)
+    clfOrientation.fit(X, Y)
 
 
 # test d'apprentissage
+def testForm(nb_test):
+    global clfForm
+    global shapes
+    score = 0
+    for i in range(nb_test):
+        forme = np.random.randint(0, len(shapes), dtype=int)
+        image = generateFromShape(shapes[forme])
+        result = clfForm.predict([reformatImage(image)])
+        if int(round(result[0])) == forme:
+            score += 1.
+        plt.imshow(image)
+        plt.title(shapes[int(round(result[0]))] + "   result: " + str(result[0]))
+        plt.show()
 
-nb_train = 2000
-forme_names = shapes
-formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
-X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-Y = np.array([float(formes[i]) for i in range(nb_train)])
+    score /= nb_test
+    print("Score sur " + str(nb_test) + " samples : " + str(score))
+
+    return score
+
+def getForm(img):
+    global clfForm
+    global shape
+    result = clfForm.predict([reformatImage(img)])
+    return shape[int(round(result[0]))]
+
+def getOrientation(img):
+    global clfOrientation
+    global orientations
+    result = clfOrientation.predict([reformatImage(img)])
+    return orientations[int(round(result[0]))]
 
 
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                    verbose=True)
-clf.fit(X, Y)
-score = 0
+nb_train = 200
 nb_test = 20
-for i in range(nb_test):
-    forme = np.random.randint(0, len(forme_names), dtype=int)
-    image = generateFromShape(forme_names[forme])
-    result = clf.predict([reformatImage(image)])
-    if int(round(result[0])) == forme:
-        score += 1.
-    plt.imshow(image)
-    plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-    plt.show()
+learnForm(nb_train)
+testForm(nb_test)
 
-
-score /= nb_test
-print("Score sur " + str(nb_test) + " samples : " + str(score))
 

@@ -1,0 +1,12 @@
+point,unitaire,unique,seul,solitude,un,marque,score,foyer,abscisse,coeur,extrémité,finalité,fin,,,,,,,,,,,
+ligne,droit,duo,raide,ligne,aligné,alignement,rectiligne,raideur,trait,barre,droite,longiligne,tendu,linéaire,,,,,,,,,,
+triangle,triangle,trio,trinité,tetra,trois,équilatéral,isocèle,delta,obtu,,,,,,,,,,,,,,,
+rectangle,,quadratique,boite,cadre,quadrilatère,,,,quatre,carreau,damier,parallélogramme,quadrangle,quadrangulaire,angle-droit,,,,,,,,,
+carré,carré,rangé,boite,cadre,quadrilatère,cube,cubique,cubisme,quatre,carreau,damier,parallélogramme,quadrangle,quadrangulaire,parallèle, franc,sincère ,ferme ,loyal ,épais ,net ,ouvert ,honnête ,droit
+losange,,,,,,,,,,,,,quadrangle,quadrangulaire,,,,,,,,,,
+5côtés,,,,,,la,,,,,,,,,,,,,,,,,,
+droit,sagaie     ,javelot,sagette,javeline,dard,lance,pointe,pointu,,,,,,,,,,,,,,,,
+cercle,rond,arc,sphere,circonférence,diamètre,rayon,PI,trigonométrie,compagnie,relation,domaine,entourage,réunion,assemblée,courbe,rond,arceau,,,,,,,
+rapproché,petit,étroit,court,reduit,diminué,écourté,rappetissé,minuscule,bas,mini,rabougri,restreint,étouffé,fin,filiforme,,,,,,,,,
+distance-moyenne,petit,étroit,court,reduit,diminué,écourté,rappetissé,minuscule,bas,mini,rabougri,restreint,étouffé,fin,filiforme,,,,,,,,,
+éloigné,large,infini,interminable,allongé,long,étendu,grand,élancé,éternel,illimité,interminable,indéfini,espacé,spacieux,gras,épais,,,,,,,,
