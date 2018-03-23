@@ -92,8 +92,11 @@ def canoniqueRectangle(fractal=0.):
 
 
 def canoniqueFleche(fractal=0.):
-    # TODO action de fractal
-    return ([0, 0.5, 0, -0.5], [-0.2, -0.5, 0.7, -0.5])
+    x_haut = random(-fractal * 0.5, fractal * 0.5)
+    y_bas = random(0, fractal * 0.5)
+    x_bas = random(-0.5 + x_haut * (y_bas + 0.3) / 0.9, 0.5
+                   + x_haut * (y_bas + 0.3) / 0.9)
+    return ([x_bas, 0.5, x_haut, -0.5], [-0.2, -0.5, 0.7 + y_bas, -0.5])
 
 
 # Fonctions de transformation d'une forme
@@ -215,7 +218,7 @@ def displayShapes(shapes, n):
 
 
 shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
-# displayShapes(shapes, 20)
+displayShapes(shapes, 20)
 
 
 
@@ -224,30 +227,30 @@ shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
 
 # test d'apprentissage
 
-nb_train = 2000
-forme_names = shapes
-formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
-X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-Y = np.array([float(formes[i]) for i in range(nb_train)])
+# nb_train = 2000
+# forme_names = shapes
+# formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
+# X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
+# Y = np.array([float(formes[i]) for i in range(nb_train)])
 
 
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                    hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                    verbose=True)
-clf.fit(X, Y)
-score = 0
-nb_test = 20
-for i in range(nb_test):
-    forme = np.random.randint(0, len(forme_names), dtype=int)
-    image = generateFromShape(forme_names[forme])
-    result = clf.predict([reformatImage(image)])
-    if int(round(result[0])) == forme:
-        score += 1.
-    plt.imshow(image)
-    plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
-    plt.show()
+# clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+#                     hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+#                     verbose=True)
+# clf.fit(X, Y)
+# score = 0
+# nb_test = 20
+# for i in range(nb_test):
+#     forme = np.random.randint(0, len(forme_names), dtype=int)
+#     image = generateFromShape(forme_names[forme])
+#     result = clf.predict([reformatImage(image)])
+#     if int(round(result[0])) == forme:
+#         score += 1.
+#     plt.imshow(image)
+#     plt.title(forme_names[int(round(result[0]))] + "   result: " + str(result[0]))
+#     plt.show()
 
 
-score /= nb_test
-print("Score sur " + str(nb_test) + " samples : " + str(score))
+# score /= nb_test
+# print("Score sur " + str(nb_test) + " samples : " + str(score))
 
