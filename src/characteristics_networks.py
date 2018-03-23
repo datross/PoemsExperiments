@@ -7,7 +7,7 @@ from center import Center
 
 WIDTH = 128
 HEIGHT = 128
-SHAPES = ["triangle", "carre", "rectangle", "losange", "fleche"]
+SHAPES = ["triangle", "carre"]#, "rectangle", "losange", "fleche"
 ORIENTATIONS = ["vertical", "horizontal", "oblique-droit", "oblique-gauche"]
 
 # fonctions utilitaires généralistes
@@ -191,7 +191,7 @@ def displaceRotateScaleTranslateInFrame(coords,
                                         ymax,
                                         displace_factor=0.1,
                                         angle=None,
-                                        aire_min=9):
+                                        aire_min=70):
     """Comme le om l'indique, fait varier n'importe quelle forme."""
     # displace aléatoire
     displacement = [(random(-displace_factor, displace_factor),
@@ -332,7 +332,7 @@ def testShape(nb_test):
             score += 1.
         if i < 10:
             plt.imshow(image)
-            plt.title(SHAPES[np.argmax(result[0])])
+            plt.title(SHAPES[np.argmax(result[0])]+" "+str(result))
             plt.show()
 
     score /= nb_test
@@ -394,7 +394,7 @@ def testGetOrientation(n):
 
 # testGetOrientation(10)
 
-# nb_train = 50000
-# nb_test = 200
-# learnShape(nb_train)
-# testShape(nb_test)
+nb_train = 10000
+nb_test = 200
+learnShape(nb_train)
+testShape(nb_test)

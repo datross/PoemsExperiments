@@ -1,6 +1,8 @@
 import sklearn
 import re
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 import glob
@@ -16,7 +18,9 @@ def loadPoems():
     # global poemIDs
     global mappedWords
     poems = []
+    paths = []
     for i, path in enumerate(glob.glob("../res/poems/*")):
+        paths.append(path)
         file = open(path, "r", encoding="utf-8")
         poem = file.read()
         poems.append(poem)
@@ -27,7 +31,7 @@ def loadPoems():
                 mappedWords[w.lower()] = i
 
         file.close()
-    return poems
+    return poems, paths
 
 
 # def initVectorisers():
@@ -75,30 +79,53 @@ def addSynonyms(vocab):
 def getPoemId():
     global poemIDs
 
-    poems = loadPoems()
-    vec = CountVectorizer()
-    X = vec.fit_transform(poems)
+    poems, paths = loadPoems()
+    vec = TfidfVectorizer()
     # wantedWords = getWantedWord()
-    wantedWords = ["amour"]
-    wantedWordsConcat = []
-    wantedWordsConcat.append(' '.join(wantedWords))
-    print(X.shape)
-    print(len(mappedWords))
-    tf_transformer = TfidfTransformer(use_idf=False).fit(X)
+    X = vec.fit_transform(poems)
+    wantedWords = ["beau", "soir"]
+    vocabIds = []
+    for w in wantedWords:
+        id = vec.vocabulary_.get(w)
+        if id:
+            vocabIds.append(id)
+    # print(vec.get_feature_names())
+    poemsMatrix = X.toarray()
+    wantedWordsMatrix = poemsMatrix[:,vocabIds]
+    wantedWordsMatrixSum = np.sum(wantedWordsMatrix, axis=1)
 
-    clf = MultinomialNB().fit(X, poemIDs)
+    id = np.argmax(wantedWordsMatrixSum)
+    print(paths[id])
 
-    X_new_counts = vec.transform(wantedWordsConcat)
-    X_new_tfidf = tf_transformer.transform(X_new_counts)
 
-    predicted = clf.predict_proba(X_new_tfidf)[0]
 
-    moy = []
-    maxi = []
-    moy.append(np.mean(predicted))
-    maxi.append(np.max(predicted))
+    # wantedWordsConcat = []
+    # wantedWordsConcat.append(' '.join(wantedWords))
+    # poems.insert(0, wantedWords)
 
-    print(wantedWords)
+
+
+    # print(X.shape)
+    # print(len(mappedWords))
+    # print(vec.vocabulary_.get(u'amour'))
+    # tf_transformer = TfidfTransformer(use_idf=False).fit(X)
+
+    # clf = MultinomialNB().fit(X, poemIDs)
+
+    # X_new_counts = TfidfVectorizer().fit_transform(wantedWordsConcat)
+    # X_new_tfidf = tf_transformer.transform(X_new_counts)
+
+    # predicted = clf.predict_proba(X_new_tfidf)[0]
+    # merde =linear_kernel(X[0:1], X).flatten()
+    # print(merde.argsort()[:-5:-1])
+    # print(np.array(poems)[merde.argsort()[:-4:-2]])
+
+    # moy = []
+    # maxi = []
+    # moy.append(np.mean(predicted))
+    # maxi.append(np.max(predicted))
+
+    # print(wantedWords)
 
 
     # while not isGoodPrediction(moy, maxi):
@@ -117,9 +144,10 @@ def getPoemId():
     #     maxi.append(np.max(predicted))
 
 
-    maxId = np.argmax(predicted)
+    # maxId = np.argmax(predicted)
 
-    return maxId
+    # return maxId
+    return 0
 
 def getPoemTxt(id):
     path = glob.glob("./res/poems/musset_"+str(id)+".txt")[0]

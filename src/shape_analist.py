@@ -157,7 +157,7 @@ c1 = (0, 1, 0)
 c2 = (-1, 0, 0)
 c3 = (0, 1, 0)
 
-# cara = getVocabulary(IMG_PATH, [c1, c2])
+cara = getVocabulary(IMG_PATH, [c1, c2])
 # print(dist(c1, c2, c3))
-# print(cara)
+print(cara)
 
