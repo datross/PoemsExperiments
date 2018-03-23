@@ -14,41 +14,44 @@ CHARA_MAPPING = cvp.getCharacteristiqueMapping()
 
 # utility functions
 def distTwoPoint(p1, p2):
-	return math.sqrt(pow(p2.x-p1.x, 2) + pow(p2.y-p1.y, 2))
+    return math.sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2))
+
 
 def dist(positions):
-	somDist = 0
-	# X = [p.x for p in positions]
-	# Y = [p.y for p in positions]
+    somDist = 0
+    # X = [p.x for p in positions]
+    # Y = [p.y for p in positions]
 
-	for i in range(len(positions)):
-		nextId = (i+1)%len(positions)
-		somDist += distTwoPoint(positions[i], positions[nextId])
+    for i in range(len(positions)):
+        nextId = (i + 1) % len(positions)
+        somDist += distTwoPoint(positions[i], positions[nextId])
 
-	return somDist/len(positions)
+    return somDist / len(positions)
+
 
 def getSpaceChara(coords):
-	points = [(c.x, c.y) for c in coords]
-	center = np.mean(points, axis=0)
-	center = Center(center[0], center[1])
-	
-	chara = []
+    points = [(c.x, c.y) for c in coords]
+    center = np.mean(points, axis=0)
+    center = Center(center[0], center[1])
 
-	if abs(center.x) < CENTER_THRESHOLD and abs(center.y) < CENTER_THRESHOLD :
-		chara.append('centré')
-		return chara
+    chara = []
 
-	if center.x > CENTER_THRESHOLD :
-		chara.append('est')
-	elif center.x < CENTER_THRESHOLD :
-		chara.append('ouest')
+    if abs(center.x) < CENTER_THRESHOLD and abs(center.y) < CENTER_THRESHOLD:
+        chara.append('centré')
+        return chara
 
-	if center.y > CENTER_THRESHOLD :
-		chara.append('nord')
-	elif center.y < CENTER_THRESHOLD :
-		chara.append('sud')
+    if center.x > CENTER_THRESHOLD:
+        chara.append('est')
+    elif center.x < CENTER_THRESHOLD:
+        chara.append('ouest')
 
-	return chara
+    if center.y > CENTER_THRESHOLD:
+        chara.append('nord')
+    elif center.y < CENTER_THRESHOLD:
+        chara.append('sud')
+
+    return chara
+
 
 def getDistanceChara(coords):
 	distance = dist(coords) 
@@ -80,36 +83,39 @@ def analyseEasyShape(coords):
 	return characterists
 
 def analyseComplexeShape(img):
-	characterists = []
-	characterists.append(cn.getForm(img))
-	characterists.append(cn.getOrentation(img))
-	return characterists
+    characterists = []
+    characterists.append(cn.getShape(img))
+    characterists.append(cn.getOrentation(img))
+    return characterists
+
+
+charaMapping = cvp.getCharacteristiqueMapping()
 
 
 def getVocabulary(img, coordonnates):
-	vocab=[]
-	characterists=[]
-	coords = [Center(x, y) for x,y,_ in coordonnates]
-	groups = [g for _,_,g in coordonnates if g==True]
+    vocab = []
+    characterists = []
+    coords = [Center(x, y) for x, y, _ in coordonnates]
+    groups = [g for _, _, g in coordonnates if g == True]
 
-	if len(coords) < 3:
-		characterists = analyseEasyShape(coords)
-	else:
-		characterists = analyseComplexeShape(coords)
+    if len(coords) < 3:
+        characterists = analyseEasyShape(coords)
+    else:
+        characterists = analyseComplexeShape(coords)
 
-	characterists+=getSpaceChara(coords)
+        characterists += getSpaceChara(coords)
 
-	characterists.append(getDistanceChara(coords))
+        characterists.append(getDistanceChara(coords))
 
-	print(characterists)
-	# si ils y a des groupes 
-	if len(groups)>0:
-		characterists.append('groupe')
-	# for c in characterists:
-	# 	vocab.append(CHARA_MAPPING[c])
+        print(characterists)
+        # si ils y a des groupes
+        if len(groups) > 0:
+            characterists.append('groupe')
 
-	return vocab
+# for c in characterists:
+# 	vocab.append(CHARA_MAPPING[c])
 
+    return vocab
 
 c1 = (1, 0, 0)
 c2 = (-1, 0, 0)

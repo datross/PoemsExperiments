@@ -1,19 +1,13 @@
 * Caractéristiques
 
+/Pas à jour !/
+
 | Forme    | Orientation    | Régularité | Taille |
 |----------+----------------+------------+--------|
 | carré    | oblique-gauche | regulier-2 | grand  |
 | ligne    | horizontal     | regulier-0 | petit  |
-| triangle | vertical       | regulier-1 | moyen  |
+| triangle | vertical       | regulier-1 |        |
 | cercle   | oblique-droit  |            |        |
 | informe  |                |            |        |
 | point    |                |            |        |
 | trapèze  |                |            |        |
-
-
-#+PLOT: ind:1
-| 0.5 | 5 |
-|   1 | 8 |
-|   1 | 2 |
-|   5 | 8 |
-|   1 | 8 |

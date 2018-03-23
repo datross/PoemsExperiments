@@ -1,9 +1,14 @@
-
+from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPClassifier
 from skimage import draw
 import numpy as np
 import matplotlib.pyplot as plt
+from center import Center
 
+WIDTH = 128
+HEIGHT = 128
+SHAPES = ["triangle", "carre", "rectangle", "losange", "fleche"]
+ORIENTATIONS = ["vertical", "horizontal", "oblique-droit", "oblique-gauche"]
 
 # fonctions utilitaires généralistes
 
@@ -78,26 +83,47 @@ def canoniqueTriangle(fractal=0.):
     h = 0.9306048591020996
     x_sommet = random(-fractal * 2 * a, fractal * 2 * a)
     y_sommet = random(-fractal * 0.9 * h, fractal * 0.9 * h)
-    return ([-a/2, a/2, x_sommet], [-h/3, -h/3, 2*h/3 + y_sommet])
+    return ([-a / 2, a / 2, x_sommet], [-h / 3, -h / 3, 2 * h / 3 + y_sommet])
 
 
 def canoniqueLosange(fractal=0.):
     y_sommet = random(-fractal * 0.7, fractal * 0.7)
-    return ([0, 0.5, 0, -0.5],
-            [-0.8 + y_sommet, 0, 0.8 - y_sommet, 0])
+    return ([0, 0.5, 0, -0.5], [-0.8 + y_sommet, 0, 0.8 - y_sommet, 0])
 
 
 def canoniqueRectangle(fractal=0.):
-    w = 1.5 + random(-fractal * 0.3, 2 * fractal)
-    return ([0.5*w, 0.5*w, -0.5*w, -0.5*w], [-0.5, 0.5, 0.5, -0.5])
+    h = 1.5 + random(-fractal * 0.3, 2 * fractal)
+    return ([0.5, 0.5, -0.5, -0.5], [-h, h, h, -h])
 
 
 def canoniqueFleche(fractal=0.):
-    # TODO action de fractal
-    return ([0, 0.5, 0, -0.5], [-0.2, -0.5, 0.7, -0.5])
+    x_haut = random(-fractal * 0.5, fractal * 0.5)
+    y_bas = random(0, fractal * 0.5)
+    x_bas = random(-0.5 + x_haut * (y_bas + 0.3) / 0.9,
+                   0.5 + x_haut * (y_bas + 0.3) / 0.9)
+    # desactivation de fractal
+    # TODO
+    x_bas = x_haut = y_bas = 0
+    return ([x_bas, 0.5, x_haut, -0.5], [-0.2, -0.5, 0.7 + y_bas, -0.5])
+
+
+def canoniqueShape(shape, fractal=0.):
+    if shape == "carre":
+        return canoniqueCarre()
+    elif shape == "rectangle":
+        return canoniqueRectangle(fractal)
+    elif shape == "triangle":
+        return canoniqueTriangle(fractal)
+    elif shape == "losange":
+        return canoniqueLosange(fractal)
+    elif shape == "fleche":
+        return canoniqueFleche(fractal)
+    else:
+        raise Exception("Unknown shape: " + str(shape))
 
 
 # Fonctions de transformation d'une forme
+
 
 def rotate(coords, angle, pivot=(0, 0)):
     """Effets de bord, ça change coords et le retourne aussi."""
@@ -106,8 +132,8 @@ def rotate(coords, angle, pivot=(0, 0)):
     for i in range(len(coords[0])):
         _x = coords[0][i] - pivot[0]
         _y = coords[1][i] - pivot[1]
-        coords[0][i] = _x*c - s*_y + pivot[0]
-        coords[1][i] = _x*s + c*_y + pivot[1]
+        coords[0][i] = _x * c - s * _y + pivot[0]
+        coords[1][i] = _x * s + c * _y + pivot[1]
     return coords
 
 
@@ -116,8 +142,8 @@ def scale(coords, factor, pivot=(0, 0)):
     for i in range(len(coords[0])):
         _x = coords[0][i] - pivot[0]
         _y = coords[1][i] - pivot[1]
-        coords[0][i] = _x*factor + pivot[0]
-        coords[1][i] = _y*factor + pivot[1]
+        coords[0][i] = _x * factor + pivot[0]
+        coords[1][i] = _y * factor + pivot[1]
     return coords
 
 
@@ -159,10 +185,21 @@ def translateInLimits(coords, xmax, ymax):
 
 # génération des formes
 
-def displaceRotateScaleTranslateInFrame(coords, xmax, ymax, aire_min=9):
+
+def displaceRotateScaleTranslateInFrame(coords,
+                                        xmax,
+                                        ymax,
+                                        displace_factor=0.1,
+                                        angle=None,
+                                        aire_min=9):
     """Comme le om l'indique, fait varier n'importe quelle forme."""
+    # displace aléatoire
+    displacement = [(random(-displace_factor, displace_factor),
+                     random(-displace_factor, displace_factor))
+                    for i in range(len(coords[0]))]
+    displace(coords, displacement)
     # rotation aléatoire
-    rotate(coords, random(0, 2*np.pi))
+    rotate(coords, angle if angle else random(0, 2 * np.pi))
     # scale aléatoire avec boundingBox plus petite inférieure aux limites
     scaleInLimits(coords, xmax, ymax, aire_min)
     # placement aléatoire dans la frame
@@ -171,39 +208,42 @@ def displaceRotateScaleTranslateInFrame(coords, xmax, ymax, aire_min=9):
     return coords
 
 
-WIDTH = 128
-HEIGHT = 128
-
-
-def generateFromShape(shape):
-    coords = ([], [])
-
-    if shape == "triangle":
-        coords = displaceRotateScaleTranslateInFrame(
-            canoniqueTriangle(fractal=1), WIDTH, HEIGHT)
-    elif shape == "carre":
-        coords = displaceRotateScaleTranslateInFrame(
-            canoniqueCarre(), WIDTH, HEIGHT)
-    elif shape == "rectangle":
-        coords = displaceRotateScaleTranslateInFrame(
-            canoniqueRectangle(fractal=1), WIDTH, HEIGHT)
-    elif shape == "losange":
-        coords = displaceRotateScaleTranslateInFrame(
-            canoniqueLosange(fractal=1), WIDTH, HEIGHT)
-    elif shape == "fleche":
-        coords = displaceRotateScaleTranslateInFrame(
-            canoniqueFleche(fractal=1), WIDTH, HEIGHT)
+def generateFromShape(shape, rasterize=True):
+    coords = displaceRotateScaleTranslateInFrame(
+        canoniqueShape(shape, fractal=1.), WIDTH, HEIGHT)
 
     image = np.zeros((HEIGHT, WIDTH))
     rasterized = draw.polygon(coords[0], coords[1])
     image[rasterized[0], rasterized[1]] = 1.
-
+    if not rasterize:
+        return coords, image
     return image
 
 
-def generateFromShapeByOrientation(orientation):
-    # TODO générer des formes aléatoire aillant l'orientation demander
-    return
+# def generateFromOrientation(orientation):
+#     shape = SHAPES[np.random.randint(0, len(SHAPES))]
+#     coords = canoniqueShape(shape, fractal=1.)
+#     angle_variation = np.pi / 10
+#     opposite = 1 if np.random.random() > 5 else -1
+#     if orientation == "vertical":
+#         angle = 0
+#     elif orientation == "horizontal":
+#         angle = opposite * np.pi / 2
+#     elif orientation == "oblique-gauche":
+#         angle = opposite * np.pi / 4
+#     elif orientation == "oblique-droit":
+#         angle = -np.pi / 4
+#     else:
+#         raise Exception('Unknown orientation: ' + str(orientation))
+#     angle += random(-angle_variation, angle_variation)
+
+#     displaceRotateScaleTranslateInFrame(coords, WIDTH, HEIGHT, angle=angle)
+
+#     image = np.zeros((HEIGHT, WIDTH))
+#     rasterized = draw.polygon(coords[0], coords[1])
+#     image[rasterized[0], rasterized[1]] = 1.
+
+#     return image
 
 
 def reformatImage(image):
@@ -220,58 +260,78 @@ def displayShapes(shapes, n):
         plt.show()
 
 
-shapes = ["triangle", "carre", "rectangle", "losange", "fleche"]
-orientations = ["droit", "oblique"]
-clfForm = None
+# def displayOrientations(orientations, n):
+#     for i in range(n):
+#         orientation = np.random.randint(0, len(orientations))
+#         image = generateFromOrientation(orientations[orientation])
+#         plt.imshow(image)
+#         plt.title(orientations[orientation])
+#         plt.show()
+
+clfShape = None
 clfOrientation = None
+
 # displayShapes(shapes, 20)
+# displayOrientations(ORIENTATIONS, 20)
+
+
+def arrayDirac(size, i):
+    zeros = np.zeros(size, dtype=float)
+    zeros[i] = 1.
+    return zeros
+
 
 # fonction d'apprentissage
-def learnForm(nb_train):
-    global clfForm
-    global shapes
-    forme_names = shapes
+def learnShape(nb_train):
+    global clfShape
+    global SHAPES
+    forme_names = SHAPES
     formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
-    X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-    Y = np.array([float(formes[i]) for i in range(nb_train)])
+    X = np.array([
+        reformatImage(generateFromShape(forme_names[formes[i]]))
+        for i in range(nb_train)
+    ])
+    Y = np.array([arrayDirac(len(SHAPES), formes[i]) for i in range(nb_train)])
+
+    clfShape = MLPClassifier(
+        solver='lbfgs',
+        alpha=1e-5,
+        hidden_layer_sizes=(100, 50, 20),
+        random_state=1,
+        verbose=True)
+    clfShape.fit(X, Y)
 
 
-    clfForm = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                        verbose=True)
-    clfForm.fit(X, Y)
+# def learnOrientation(nb_train):
+#     global clfOrientation
+#     global orientations
 
+#     orientations_name = orientations
+#     orients = np.random.randint(0, len(orientations_name), nb_train, dtype=int)
+#     # TODO  appel a générate shape by rotation
+#     X = np.array([reformatImage(generateFromShape(orientations_name[orients[i]])) for i in range(nb_train)])
+#     Y = np.array([float(orients[i]) for i in range(nb_train)])
 
-def learnOrientation(nb_train):
-    global clfOrientation
-    global orientations
-
-    orientations_name = orientations
-    orients = np.random.randint(0, len(orientations_name), nb_train, dtype=int)
-    # TODO  appel a générate shape by rotation
-    X = np.array([reformatImage(generateFromShape(orientations_name[orients[i]])) for i in range(nb_train)])
-    Y = np.array([float(orients[i]) for i in range(nb_train)])
-
-
-    clfOrientation = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                        verbose=True)
-    clfOrientation.fit(X, Y)
+#     clfOrientation = MLPClassifier(solver='lbfgs', alpha=1e-5,
+#                         hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
+#                         verbose=True)
+#     clfOrientation.fit(X, Y)
 
 
 # test d'apprentissage
-def testForm(nb_test):
-    global clfForm
-    global shapes
+def testShape(nb_test):
+    global clfShape
+    global SHAPES
     score = 0
     for i in range(nb_test):
-        forme = np.random.randint(0, len(shapes), dtype=int)
-        image = generateFromShape(shapes[forme])
-        result = clfForm.predict([reformatImage(image)])
-        if int(round(result[0])) == forme:
+        forme = np.random.randint(0, len(SHAPES), dtype=int)
+        image = generateFromShape(SHAPES[forme])
+        result = clfShape.predict_proba([reformatImage(image)])
+        if np.argmax(result[0]) == forme:
             score += 1.
         plt.imshow(image)
-        plt.title(shapes[int(round(result[0]))] + "   result: " + str(result[0]))
+        plt.title(
+            SHAPES[np.argmax(result[0])] + "   result: " + str(result))
         plt.show()
 
     score /= nb_test
@@ -279,22 +339,52 @@ def testForm(nb_test):
 
     return score
 
-def getForm(img):
-    global clfForm
-    global shape
-    result = clfForm.predict([reformatImage(img)])
-    return shape[int(round(result[0]))]
 
-def getOrientation(img):
-    global clfOrientation
-    global orientations
-    result = clfOrientation.predict([reformatImage(img)])
-    return orientations[int(round(result[0]))]
+def getShape(img):
+    global clfShape
+    global SHAPES
+    result = clfShape.predict([reformatImage(img)])
+    return SHAPES[int(round(result[0]))]
 
 
-# nb_train = 200
-# nb_test = 20
-# learnForm(nb_train)
-# testForm(nb_test)
+def getOrientation(coords):
+    X = [[p.x, p.y] for p in coords]
+    pca = PCA(n_components=2)
+    pca.fit(X)
+    return pca.components_, pca.singular_values_
 
 
+def testGetOrientation(n):
+    for i in range(n):
+        coords, image = generateFromShape(SHAPES[np.random.randint(
+            0, len(SHAPES))], False)
+        coords = [
+            Center(coords[0][i], coords[1][i]) for i in range(len(coords[0]))
+        ]
+        orientation = getOrientation(coords)
+        # on draw le lines de la pca
+        line_dir = orientation[0][0 if orientation[1][0] > orientation[1][1]
+                                  else 1]
+        line = draw.line(
+            int(WIDTH / 2), int(HEIGHT / 2),
+            int(WIDTH / 2 + 32. * line_dir[0]),
+            int(HEIGHT / 2 + 32. * line_dir[1]))
+        image[line[0], line[1]] = 2.
+
+        plt.imshow(image)
+        plt.title("pca: " + str(orientation))
+        plt.show()
+
+
+# testGetOrientation(10)
+
+# def getOrientation(img):
+#     global clfOrientation
+#     global orientations
+#     result = clfOrientation.predict([reformatImage(img)])
+#     return orientations[int(round(result[0]))]
+
+nb_train = 10
+nb_test = 20
+learnShape(nb_train)
+testShape(nb_test)
