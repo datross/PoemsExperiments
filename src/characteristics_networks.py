@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from center import Center
 
-
 WIDTH = 128
 HEIGHT = 128
 SHAPES = ["triangle", "carre", "rectangle", "losange", "fleche"]
@@ -84,13 +83,12 @@ def canoniqueTriangle(fractal=0.):
     h = 0.9306048591020996
     x_sommet = random(-fractal * 2 * a, fractal * 2 * a)
     y_sommet = random(-fractal * 0.9 * h, fractal * 0.9 * h)
-    return ([-a/2, a/2, x_sommet], [-h/3, -h/3, 2*h/3 + y_sommet])
+    return ([-a / 2, a / 2, x_sommet], [-h / 3, -h / 3, 2 * h / 3 + y_sommet])
 
 
 def canoniqueLosange(fractal=0.):
     y_sommet = random(-fractal * 0.7, fractal * 0.7)
-    return ([0, 0.5, 0, -0.5],
-            [-0.8 + y_sommet, 0, 0.8 - y_sommet, 0])
+    return ([0, 0.5, 0, -0.5], [-0.8 + y_sommet, 0, 0.8 - y_sommet, 0])
 
 
 def canoniqueRectangle(fractal=0.):
@@ -101,8 +99,8 @@ def canoniqueRectangle(fractal=0.):
 def canoniqueFleche(fractal=0.):
     x_haut = random(-fractal * 0.5, fractal * 0.5)
     y_bas = random(0, fractal * 0.5)
-    x_bas = random(-0.5 + x_haut * (y_bas + 0.3) / 0.9, 0.5
-                   + x_haut * (y_bas + 0.3) / 0.9)
+    x_bas = random(-0.5 + x_haut * (y_bas + 0.3) / 0.9,
+                   0.5 + x_haut * (y_bas + 0.3) / 0.9)
     # desactivation de fractal
     # TODO
     x_bas = x_haut = y_bas = 0
@@ -126,6 +124,7 @@ def canoniqueShape(shape, fractal=0.):
 
 # Fonctions de transformation d'une forme
 
+
 def rotate(coords, angle, pivot=(0, 0)):
     """Effets de bord, ça change coords et le retourne aussi."""
     c = np.cos(angle)
@@ -133,8 +132,8 @@ def rotate(coords, angle, pivot=(0, 0)):
     for i in range(len(coords[0])):
         _x = coords[0][i] - pivot[0]
         _y = coords[1][i] - pivot[1]
-        coords[0][i] = _x*c - s*_y + pivot[0]
-        coords[1][i] = _x*s + c*_y + pivot[1]
+        coords[0][i] = _x * c - s * _y + pivot[0]
+        coords[1][i] = _x * s + c * _y + pivot[1]
     return coords
 
 
@@ -143,8 +142,8 @@ def scale(coords, factor, pivot=(0, 0)):
     for i in range(len(coords[0])):
         _x = coords[0][i] - pivot[0]
         _y = coords[1][i] - pivot[1]
-        coords[0][i] = _x*factor + pivot[0]
-        coords[1][i] = _y*factor + pivot[1]
+        coords[0][i] = _x * factor + pivot[0]
+        coords[1][i] = _y * factor + pivot[1]
     return coords
 
 
@@ -186,11 +185,21 @@ def translateInLimits(coords, xmax, ymax):
 
 # génération des formes
 
-def displaceRotateScaleTranslateInFrame(coords, xmax, ymax,
-                                        angle=None, aire_min=9):
+
+def displaceRotateScaleTranslateInFrame(coords,
+                                        xmax,
+                                        ymax,
+                                        displace_factor=0.1,
+                                        angle=None,
+                                        aire_min=9):
     """Comme le om l'indique, fait varier n'importe quelle forme."""
+    # displace aléatoire
+    displacement = [(random(-displace_factor, displace_factor),
+                     random(-displace_factor, displace_factor))
+                    for i in range(len(coords[0]))]
+    displace(coords, displacement)
     # rotation aléatoire
-    rotate(coords, angle if angle else random(0, 2*np.pi))
+    rotate(coords, angle if angle else random(0, 2 * np.pi))
     # scale aléatoire avec boundingBox plus petite inférieure aux limites
     scaleInLimits(coords, xmax, ymax, aire_min)
     # placement aléatoire dans la frame
@@ -209,6 +218,7 @@ def generateFromShape(shape, rasterize=True):
     if not rasterize:
         return coords, image
     return image
+
 
 # def generateFromOrientation(orientation):
 #     shape = SHAPES[np.random.randint(0, len(SHAPES))]
@@ -258,24 +268,37 @@ def displayShapes(shapes, n):
 #         plt.title(orientations[orientation])
 #         plt.show()
 
-
 clfShape = None
 clfOrientation = None
+
 # displayShapes(shapes, 20)
 # displayOrientations(ORIENTATIONS, 20)
+
+
+def arrayDirac(size, i):
+    zeros = np.zeros(size, dtype=float)
+    zeros[i] = 1.
+    return zeros
+
 
 # fonction d'apprentissage
 def learnShape(nb_train):
     global clfShape
-    global shapes
-    forme_names = shapes
+    global SHAPES
+    forme_names = SHAPES
     formes = np.random.randint(0, len(forme_names), nb_train, dtype=int)
-    X = np.array([reformatImage(generateFromShape(forme_names[formes[i]])) for i in range(nb_train)])
-    Y = np.array([float(formes[i]) for i in range(nb_train)])
+    X = np.array([
+        reformatImage(generateFromShape(forme_names[formes[i]]))
+        for i in range(nb_train)
+    ])
+    Y = np.array([arrayDirac(len(SHAPES), formes[i]) for i in range(nb_train)])
 
-    clfShape = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                        hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
-                        verbose=True)
+    clfShape = MLPClassifier(
+        solver='lbfgs',
+        alpha=1e-5,
+        hidden_layer_sizes=(100, 50, 20),
+        random_state=1,
+        verbose=True)
     clfShape.fit(X, Y)
 
 
@@ -289,7 +312,6 @@ def learnShape(nb_train):
 #     X = np.array([reformatImage(generateFromShape(orientations_name[orients[i]])) for i in range(nb_train)])
 #     Y = np.array([float(orients[i]) for i in range(nb_train)])
 
-
 #     clfOrientation = MLPClassifier(solver='lbfgs', alpha=1e-5,
 #                         hidden_layer_sizes=(100, 20, 5, 2), random_state=1,
 #                         verbose=True)
@@ -299,16 +321,17 @@ def learnShape(nb_train):
 # test d'apprentissage
 def testShape(nb_test):
     global clfShape
-    global shapes
+    global SHAPES
     score = 0
     for i in range(nb_test):
-        forme = np.random.randint(0, len(shapes), dtype=int)
-        image = generateFromShape(shapes[forme])
-        result = clfShape.predict([reformatImage(image)])
-        if int(round(result[0])) == forme:
+        forme = np.random.randint(0, len(SHAPES), dtype=int)
+        image = generateFromShape(SHAPES[forme])
+        result = clfShape.predict_proba([reformatImage(image)])
+        if np.argmax(result[0]) == forme:
             score += 1.
         plt.imshow(image)
-        plt.title(shapes[int(round(result[0]))] + "   result: " + str(result[0]))
+        plt.title(
+            SHAPES[np.argmax(result[0])] + "   result: " + str(result))
         plt.show()
 
     score /= nb_test
@@ -319,9 +342,9 @@ def testShape(nb_test):
 
 def getShape(img):
     global clfShape
-    global shape
+    global SHAPES
     result = clfShape.predict([reformatImage(img)])
-    return shape[int(round(result[0]))]
+    return SHAPES[int(round(result[0]))]
 
 
 def getOrientation(coords):
@@ -333,12 +356,19 @@ def getOrientation(coords):
 
 def testGetOrientation(n):
     for i in range(n):
-        coords, image = generateFromShape(SHAPES[np.random.randint(0, len(SHAPES))], False)
-        coords = [Center(coords[0][i], coords[1][i]) for i in range(len(coords[0]))]
+        coords, image = generateFromShape(SHAPES[np.random.randint(
+            0, len(SHAPES))], False)
+        coords = [
+            Center(coords[0][i], coords[1][i]) for i in range(len(coords[0]))
+        ]
         orientation = getOrientation(coords)
         # on draw le lines de la pca
-        line_dir = orientation[0][0 if orientation[1][0] > orientation[1][1] else 1]
-        line = draw.line(int(WIDTH/2), int(HEIGHT/2), int(WIDTH/2 + 32. * line_dir[0]), int(HEIGHT/2 + 32. * line_dir[1]))
+        line_dir = orientation[0][0 if orientation[1][0] > orientation[1][1]
+                                  else 1]
+        line = draw.line(
+            int(WIDTH / 2), int(HEIGHT / 2),
+            int(WIDTH / 2 + 32. * line_dir[0]),
+            int(HEIGHT / 2 + 32. * line_dir[1]))
         image[line[0], line[1]] = 2.
 
         plt.imshow(image)
@@ -346,15 +376,15 @@ def testGetOrientation(n):
         plt.show()
 
 
-testGetOrientation(10)
+# testGetOrientation(10)
+
 # def getOrientation(img):
 #     global clfOrientation
 #     global orientations
 #     result = clfOrientation.predict([reformatImage(img)])
 #     return orientations[int(round(result[0]))]
 
-
-# nb_train = 200
-# nb_test = 20
-# learnShape(nb_train)
-# testShape(nb_test)
+nb_train = 10
+nb_test = 20
+learnShape(nb_train)
+testShape(nb_test)
