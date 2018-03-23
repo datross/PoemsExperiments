@@ -1,2 +1,3 @@
 src/synonymes.dat
-.DS_Store
+src/synonymesaveOE.dat
+*.DS_Store

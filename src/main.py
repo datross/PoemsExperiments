@@ -23,6 +23,8 @@ def loadPoems():
         for w in words:
             if w:
                 mappedWords[w.lower()] = i
+
+        file.close()
     return poems
 
 
@@ -85,7 +87,7 @@ def getPoemId():
     X_new_counts = vec.transform(wantedWordsConcat)
     X_new_tfidf = tf_transformer.transform(X_new_counts)
 
-    predicted = clf.predict_proba(X_new_counts)[0]
+    predicted = clf.predict_proba(X_new_tfidf)[0]
 
     moy = []
     maxi = []
@@ -119,6 +121,7 @@ def getPoemTxt(id):
     path = glob.glob("./res/poems/musset_"+str(id)+".txt")[0]
     file = open(path, "r", encoding="utf-8")
     poem = file.read()
+    file.close()
     return poem
 
 
