@@ -62,6 +62,22 @@ def getDistanceChara(coords):
 
 	return 'éloigné'
 
+def getOrientationChara(coords):
+	cds = list(coords)
+	if cds[1].x < cds[0].x:
+		tmp = cds[0]
+		cds[0] = cds[1]
+		cds[1] = tmp
+
+	if abs(cds[0].x - cds[1].x) < STRAIGHT_THRESHOLD :
+		return 'vertical'
+	if abs(cds[0].y - cds[1].y) < STRAIGHT_THRESHOLD :
+		return 'horizontal'
+	if cds[0].x < cds[1].x and cds[0].y > cds[1].y :
+		return 'oblique-gauche'
+	
+	return 'oblique-droit'
+
 def analyseEasyShape(coords):
 	characterists = []
 	# s'il y a qu'une seul position
@@ -70,23 +86,18 @@ def analyseEasyShape(coords):
 	# s'il y a deux positions
 	else:
 		characterists.append('ligne')
-		
-		if abs(coords[0].x - coords[1].x) < STRAIGHT_THRESHOLD :
-			characterists.append('vertical')
-		elif abs(coords[0].y - coords[1].y) < STRAIGHT_THRESHOLD :
-			characterists.append('horizontal')
-		elif coords[0].x < coords[1].x and coords[0].y > coords[1].y :
-			characterists.append('oblique-gauche')
-		else:
-			characterists.append('oblique-droit')
+		characterists.append(getOrientationChara(coords))
 
 	return characterists
 
-def analyseComplexeShape(img):
-    characterists = []
-    characterists.append(cn.getShape(img))
-    characterists.append(cn.getOrentation(img))
-    return characterists
+def analyseComplexeShape(img, coords):
+	characterists = []
+	characterists.append(cn.getShape(img))
+
+	orientationLine = cn.getOrentationLine(coords)
+	characterists.append(getOrientationChara(orientationLine))
+
+	return characterists
 
 
 charaMapping = cvp.getCharacteristiqueMapping()
@@ -101,28 +112,52 @@ def getVocabulary(img, coordonnates):
     if len(coords) < 3:
         characterists = analyseEasyShape(coords)
     else:
-        characterists = analyseComplexeShape(coords)
+        characterists = analyseComplexeShape(img, coords)
 
-        characterists += getSpaceChara(coords)
+    characterists += getSpaceChara(coords)
 
-        characterists.append(getDistanceChara(coords))
+    characterists.append(getDistanceChara(coords))
 
-        print(characterists)
-        # si ils y a des groupes
-        if len(groups) > 0:
-            characterists.append('groupe')
+    print(characterists)
+    # si ils y a des groupes
+    if len(groups) > 0:
+        characterists.append('groupe')
 
 # for c in characterists:
 # 	vocab.append(CHARA_MAPPING[c])
 
     return vocab
 
-c1 = (1, 0, 0)
+
+def testGetOrientation(n):
+    for i in range(n):
+        coords, image = cn.generateFromShape(cn.SHAPES[np.random.randint(
+            0, len(cn.SHAPES))], False)
+        coords = [
+            Center(coords[0][i], coords[1][i]) for i in range(len(coords[0]))
+        ]
+        orientationLine = cn.getOrientationLine(coords)
+        l = orientationLine
+        # print([c.__str__() for c in orientationLine])
+        # on draw le lines de la pca
+        print(l[1])
+        orientation = getOrientationChara(orientationLine)
+
+        p1 = Center(int(cn.WIDTH / 2), int(cn.HEIGHT / 2))
+        p2 = Center(int(cn.WIDTH / 2 + 32. * l[1].x), int(cn.HEIGHT / 2 + 32. * l[1].y))
+        print(p2)
+        line = cn.draw.line(p1.x, p1.y, p2.x, p2.y)
+        image[line[0], line[1]] = 2.
+
+        cn.plt.imshow(image)
+        cn.plt.title("orientation: " + str(orientation))
+        cn.plt.show()
+
+c1 = (0, 1, 0)
 c2 = (-1, 0, 0)
 c3 = (0, 1, 0)
 
-cara = getVocabulary(IMG_PATH, [c1, c2])
-
+# cara = getVocabulary(IMG_PATH, [c1, c2])
 # print(dist(c1, c2, c3))
+# print(cara)
 
-print(cara)

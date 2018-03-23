@@ -13,6 +13,8 @@ mappedWords={}
 poemIDs = []
 
 def loadPoems():
+    # global poemIDs
+    global mappedWords
     poems = []
     for i, path in enumerate(glob.glob("../res/poems/*")):
         file = open(path, "r", encoding="utf-8")
@@ -28,13 +30,13 @@ def loadPoems():
     return poems
 
 
-def initVectorisers():
-    vectorizers = []
-    for i, p in enumerate(poems):
-        c = CountVectorizer()
-        x = c.fit_transform([p])
-        vectorizers.append(c)
-    return vectorizers
+# def initVectorisers():
+#     vectorizers = []
+#     for i, p in enumerate(poems):
+#         c = CountVectorizer()
+#         x = c.fit_transform([p])
+#         vectorizers.append(c)
+#     return vectorizers
 
 def getWantedWord():
     tab = op('../wantedWords')
@@ -71,15 +73,17 @@ def addSynonyms(vocab):
                 return;
 
 def getPoemId():
+    global poemIDs
+
     poems = loadPoems()
     vec = CountVectorizer()
     X = vec.fit_transform(poems)
     # wantedWords = getWantedWord()
-    wantedWords = ["amour", "gloire", "beauté"]
+    wantedWords = ["amour"]
     wantedWordsConcat = []
     wantedWordsConcat.append(' '.join(wantedWords))
-
-
+    print(X.shape)
+    print(len(mappedWords))
     tf_transformer = TfidfTransformer(use_idf=False).fit(X)
 
     clf = MultinomialNB().fit(X, poemIDs)
@@ -97,20 +101,20 @@ def getPoemId():
     print(wantedWords)
 
 
-    while not isGoodPrediction(moy, maxi):
-        addSynonyms(wantedWords)
+    # while not isGoodPrediction(moy, maxi):
+    #     addSynonyms(wantedWords)
 
-        print(wantedWords)
+    #     print(wantedWords)
 
-        wantedWordsConcat[0] = ' '.join(wantedWords)
+    #     wantedWordsConcat[0] = ' '.join(wantedWords)
 
-        X_new_counts = vec.transform(wantedWordsConcat)
-        X_new_tfidf = tf_transformer.transform(X_new_counts)
+    #     X_new_counts = vec.transform(wantedWordsConcat)
+    #     X_new_tfidf = tf_transformer.transform(X_new_counts)
 
-        predicted = clf.predict_proba(X_new_tfidf)[0]
+    #     predicted = clf.predict_proba(X_new_tfidf)[0]
 
-        moy.append(np.mean(predicted))
-        maxi.append(np.max(predicted))
+    #     moy.append(np.mean(predicted))
+    #     maxi.append(np.max(predicted))
 
 
     maxId = np.argmax(predicted)

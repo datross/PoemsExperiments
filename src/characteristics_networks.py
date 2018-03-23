@@ -161,12 +161,12 @@ def displace(coords, displacement):
 def scaleInLimits(coords, xmax, ymax, aire_min):
     """Scale la forme en la gardant dans les limites."""
     bb = boundingBox(coords)
-    w = bb[2] - bb[0]
-    h = bb[3] - bb[1]
+    w = bb[2] - bb[0] + 1
+    h = bb[3] - bb[1] + 1
     aire = airePoly(coords)
     scale_min = np.sqrt(aire_min / aire)
     scale_max = min(xmax / w, ymax / h)
-    scale_factor = random(scale_min, scale_max)
+    scale_factor = min(random(scale_min, scale_max), scale_max)
     scale(coords, scale_factor)
     return coords
 
@@ -175,9 +175,9 @@ def translateInLimits(coords, xmax, ymax):
     """Place la forme en restant dans le cadre donné."""
     bb = boundingBox(coords)
     txmin = 0 - bb[0]
-    txmax = xmax - bb[2]
+    txmax = xmax-1 - bb[2]
     tymin = 0 - bb[1]
-    tymax = ymax - bb[3]
+    tymax = ymax-1 - bb[3]
     t = (random(txmin, txmax), random(tymin, tymax))
     displace(coords, t)
     return coords
@@ -214,6 +214,7 @@ def generateFromShape(shape, rasterize=True):
 
     image = np.zeros((HEIGHT, WIDTH))
     rasterized = draw.polygon(coords[0], coords[1])
+    # print(coords)
     image[rasterized[0], rasterized[1]] = 1.
     if not rasterize:
         return coords, image
@@ -329,10 +330,10 @@ def testShape(nb_test):
         result = clfShape.predict_proba([reformatImage(image)])
         if np.argmax(result[0]) == forme:
             score += 1.
-        plt.imshow(image)
-        plt.title(
-            SHAPES[np.argmax(result[0])] + "   result: " + str(result))
-        plt.show()
+        if i < 10:
+            plt.imshow(image)
+            plt.title(SHAPES[np.argmax(result[0])])
+            plt.show()
 
     score /= nb_test
     print("Score sur " + str(nb_test) + " samples : " + str(score))
@@ -354,6 +355,16 @@ def getOrientation(coords):
     return pca.components_, pca.singular_values_
 
 
+def getOrientationLine(coords):
+    orientation =  getOrientation(coords)
+    line_dir = orientation[0][0 if orientation[1][0] > orientation[1][1] else 1]
+    # line_dir = pca.components_[0 if pca.singular_values_[0] > pca.singular_values_[1] else 1]
+
+    p1 = Center(0, 0)
+    p2 = Center(line_dir[0], line_dir[1])
+    return [p1, p2]
+
+
 def testGetOrientation(n):
     for i in range(n):
         coords, image = generateFromShape(SHAPES[np.random.randint(
@@ -363,8 +374,13 @@ def testGetOrientation(n):
         ]
         orientation = getOrientation(coords)
         # on draw le lines de la pca
+        print(orientation)
         line_dir = orientation[0][0 if orientation[1][0] > orientation[1][1]
                                   else 1]
+
+        # p1 = Center(int(WIDTH / 2), int(HEIGHT / 2))
+        # p2 = Center(int(WIDTH / 2 + 32. * line_dir[0]), int(HEIGHT / 2 + 32. * line_dir[1]))
+
         line = draw.line(
             int(WIDTH / 2), int(HEIGHT / 2),
             int(WIDTH / 2 + 32. * line_dir[0]),
@@ -378,13 +394,7 @@ def testGetOrientation(n):
 
 # testGetOrientation(10)
 
-# def getOrientation(img):
-#     global clfOrientation
-#     global orientations
-#     result = clfOrientation.predict([reformatImage(img)])
-#     return orientations[int(round(result[0]))]
-
-nb_train = 10
-nb_test = 20
-learnShape(nb_train)
-testShape(nb_test)
+# nb_train = 50000
+# nb_test = 200
+# learnShape(nb_train)
+# testShape(nb_test)
