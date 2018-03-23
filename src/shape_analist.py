@@ -1,6 +1,7 @@
 import characteristics_networks as cn
 import characteristics_vocab_parser as cvp
 import math
+import numpy as np
 from center import Center
 
 CENTER_THRESHOLD = 0.1
@@ -8,6 +9,8 @@ STRAIGHT_THRESHOLD = 0.1
 DISTANT_THRESHOLD = 0.5
 CLOSE_THRESHOLD = 0.2
 IMG_PATH = "../res/images/sceneShape.jpg"
+
+CHARA_MAPPING = cvp.getCharacteristiqueMapping();
 
 # utility functions
 def distTwoPoint(p1, p2):
@@ -24,7 +27,31 @@ def dist(positions):
 
 	return somDist/len(positions)
 
-def getDistanceChara(distance):
+def getSpaceChara(coords):
+	points = [(c.x, c.y) for c in coords]
+	center = np.mean(points, axis=0)
+	center = Center(center[0], center[1])
+	
+	chara = []
+
+	if abs(center.x) < CENTER_THRESHOLD and abs(center.y) < CENTER_THRESHOLD :
+		chara.append('centré')
+		return chara
+
+	if center.x > CENTER_THRESHOLD :
+		chara.append('est')
+	elif center.x < CENTER_THRESHOLD :
+		chara.append('ouest')
+
+	if center.y > CENTER_THRESHOLD :
+		chara.append('nord')
+	elif center.y < CENTER_THRESHOLD :
+		chara.append('sud')
+
+	return chara
+
+def getDistanceChara(coords):
+	distance = dist(coords) 
 	if distance < CLOSE_THRESHOLD : 
 		return 'rapproché'
 	elif distance > CLOSE_THRESHOLD and distance < DISTANT_THRESHOLD:
@@ -37,10 +64,6 @@ def analyseEasyShape(coords):
 	# s'il y a qu'une seul position
 	if len(coords) == 1: 
 		characterists.append('point')
-		if abs(coords[0].x) < CENTER_THRESHOLD and abs(coords[0].y) < CENTER_THRESHOLD :
-			characterists.append('centré')
-		else:
-			characterists.append('excentré')
 	# s'il y a deux positions
 	else:
 		characterists.append('ligne')
@@ -50,7 +73,6 @@ def analyseEasyShape(coords):
 		else:
 			characterists.append('oblique')
 
-
 	return characterists
 
 def analyseComplexeShape(img):
@@ -59,7 +81,6 @@ def analyseComplexeShape(img):
 	characterists.append(cn.getOrentation(img))
 	return characterists
 
-charaMapping = cvp.getCharacteristiqueMapping();
 
 def getVocabulary(img, coordonnates):
 	vocab=[]
@@ -72,14 +93,16 @@ def getVocabulary(img, coordonnates):
 	else:
 		characterists = analyseComplexeShape(coords)
 
-	distance = dist(coords) 
-	characterists.append(getDistanceChara(distance))
+	characterists+=getSpaceChara(coords)
+
+	characterists.append(getDistanceChara(coords))
+
 	print(characterists)
 	# si ils y a des groupes 
 	if len(groups)>0:
 		characterists.append('groupe')
-	for c in characterists:
-		vocab.append(charaMapping[c])
+	# for c in characterists:
+	# 	vocab.append(CHARA_MAPPING[c])
 
 	return vocab
 
@@ -88,7 +111,7 @@ c1 = (-0, 0, 0)
 c2 = (0, -1, 0)
 c3 = (0, 1, 0)
 
-cara = getVocabulary("merde.jpg", [c1, c2])
+cara = getVocabulary(IMG_PATH, [c1, c2])
 
 # print(dist(c1, c2, c3))
 

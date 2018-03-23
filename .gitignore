@@ -1,3 +1,4 @@
 src/synonymes.dat
 src/synonymesaveOE.dat
 *.DS_Store
+*.pyc
