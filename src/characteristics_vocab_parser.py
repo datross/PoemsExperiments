@@ -3,7 +3,7 @@ import re
 def getCharacteristiqueMapping():
 	charas = {}
 
-	path = '../res/characteristics_mapping.txt'
+	path = '../res/characteristics_mapping.csv'
 	
 	with open(path, 'r', encoding="utf-8") as f:
 		content = f.read()

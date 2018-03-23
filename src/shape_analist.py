@@ -10,7 +10,7 @@ DISTANT_THRESHOLD = 0.5
 CLOSE_THRESHOLD = 0.2
 IMG_PATH = "../res/images/sceneShape.jpg"
 
-CHARA_MAPPING = cvp.getCharacteristiqueMapping();
+CHARA_MAPPING = cvp.getCharacteristiqueMapping()
 
 # utility functions
 def distTwoPoint(p1, p2):
@@ -54,10 +54,10 @@ def getDistanceChara(coords):
 	distance = dist(coords) 
 	if distance < CLOSE_THRESHOLD : 
 		return 'rapproché'
-	elif distance > CLOSE_THRESHOLD and distance < DISTANT_THRESHOLD:
+	if distance > CLOSE_THRESHOLD and distance < DISTANT_THRESHOLD:
 		return 'distance-moyenne'
-	else:
-		return 'éloigné'
+
+	return 'éloigné'
 
 def analyseEasyShape(coords):
 	characterists = []
@@ -68,10 +68,14 @@ def analyseEasyShape(coords):
 	else:
 		characterists.append('ligne')
 		
-		if abs(coords[0].x - coords[1].x)< STRAIGHT_THRESHOLD or abs(coords[0].y - coords[1].y) < STRAIGHT_THRESHOLD :
-			characterists.append('droit')
+		if abs(coords[0].x - coords[1].x) < STRAIGHT_THRESHOLD :
+			characterists.append('vertical')
+		elif abs(coords[0].y - coords[1].y) < STRAIGHT_THRESHOLD :
+			characterists.append('horizontal')
+		elif coords[0].x < coords[1].x and coords[0].y > coords[1].y :
+			characterists.append('oblique-gauche')
 		else:
-			characterists.append('oblique')
+			characterists.append('oblique-droit')
 
 	return characterists
 
@@ -107,8 +111,8 @@ def getVocabulary(img, coordonnates):
 	return vocab
 
 
-c1 = (-0, 0, 0)
-c2 = (0, -1, 0)
+c1 = (1, 0, 0)
+c2 = (-1, 0, 0)
 c3 = (0, 1, 0)
 
 cara = getVocabulary(IMG_PATH, [c1, c2])
