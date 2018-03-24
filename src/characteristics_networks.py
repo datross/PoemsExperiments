@@ -170,6 +170,9 @@ def scaleInLimits(coords, xmax, ymax, aire_min):
     scale(coords, scale_factor)
     return coords
 
+def fitToFrame(coords, w, h):
+    bb = boundingBox(coords)
+
 
 def translateInLimits(coords, xmax, ymax):
     """Place la forme en restant dans le cadre donné."""
@@ -394,7 +397,7 @@ def testGetOrientation(n):
 
 # testGetOrientation(10)
 
-nb_train = 10000
+nb_train = 100
 nb_test = 200
 learnShape(nb_train)
 testShape(nb_test)

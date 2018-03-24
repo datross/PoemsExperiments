@@ -11,8 +11,13 @@ import synonymsDico
 
 POEM_CHOICE_PROBA_THRESHOLD = 1.5
 MIN_DIFF_SYNONYMS_PASS = 1.1
+NB_WORDS_MIN_EXTRACT = 20
+NB_WORDS_MAX_EXTRACT = 40
 mappedWords={}
 poemIDs = []
+wantedWords = ["beau", "soir"]
+# wantedWords = getWantedWord()
+
 
 def loadPoems():
     # global poemIDs
@@ -76,95 +81,127 @@ def addSynonyms(vocab):
                 vocab.append(s)
                 return;
 
-def getPoemId():
-    global poemIDs
 
-    poems, paths = loadPoems()
+def getBestTextId(texts, wantedWords):
     vec = TfidfVectorizer()
-    # wantedWords = getWantedWord()
-    X = vec.fit_transform(poems)
-    wantedWords = ["beau", "soir"]
+    
+    X = vec.fit_transform(texts)
     vocabIds = []
     for w in wantedWords:
         id = vec.vocabulary_.get(w)
         if id:
             vocabIds.append(id)
     # print(vec.get_feature_names())
-    poemsMatrix = X.toarray()
-    wantedWordsMatrix = poemsMatrix[:,vocabIds]
+    textsMatrix = X.toarray()
+    wantedWordsMatrix = textsMatrix[:,vocabIds]
     wantedWordsMatrixSum = np.sum(wantedWordsMatrix, axis=1)
 
     id = np.argmax(wantedWordsMatrixSum)
-    print(paths[id])
+    return id
 
 
+def getPoemName():
+    global poemIDs
 
-    # wantedWordsConcat = []
-    # wantedWordsConcat.append(' '.join(wantedWords))
-    # poems.insert(0, wantedWords)
+    poems, paths = loadPoems()
+    
+    id = getBestTextId(poems, wantedWords)
 
+    poem = paths[id].replace("../res/poems\\", '')
 
-
-    # print(X.shape)
-    # print(len(mappedWords))
-    # print(vec.vocabulary_.get(u'amour'))
-    # tf_transformer = TfidfTransformer(use_idf=False).fit(X)
-
-    # clf = MultinomialNB().fit(X, poemIDs)
-
-    # X_new_counts = TfidfVectorizer().fit_transform(wantedWordsConcat)
-    # X_new_tfidf = tf_transformer.transform(X_new_counts)
-
-    # predicted = clf.predict_proba(X_new_tfidf)[0]
-    # merde =linear_kernel(X[0:1], X).flatten()
-    # print(merde.argsort()[:-5:-1])
-    # print(np.array(poems)[merde.argsort()[:-4:-2]])
-
-    # moy = []
-    # maxi = []
-    # moy.append(np.mean(predicted))
-    # maxi.append(np.max(predicted))
-
-    # print(wantedWords)
-
-
-    # while not isGoodPrediction(moy, maxi):
-    #     addSynonyms(wantedWords)
-
-    #     print(wantedWords)
-
-    #     wantedWordsConcat[0] = ' '.join(wantedWords)
-
-    #     X_new_counts = vec.transform(wantedWordsConcat)
-    #     X_new_tfidf = tf_transformer.transform(X_new_counts)
-
-    #     predicted = clf.predict_proba(X_new_tfidf)[0]
-
-    #     moy.append(np.mean(predicted))
-    #     maxi.append(np.max(predicted))
-
-
-    # maxId = np.argmax(predicted)
-
-    # return maxId
-    return 0
+    return poem
 
 def getPoemTxt(id):
-    path = glob.glob("./res/poems/musset_"+str(id)+".txt")[0]
+    path = glob.glob("../res/poems/musset_"+str(id)+".txt")[0]
     file = open(path, "r", encoding="utf-8")
     poem = file.read()
     file.close()
     return poem
 
 
-poemId = getPoemId()
+# def checkSentencesValidity(sentences):
+#     for s in sentences:
+#         if len(s) < 20:
+#             return False
+#     return True
+
+
+def getSentences(text):
+    sentencesPoints = text.split('.')
+    sentencesInterroPoint = []
+    for v in sentencesPoints:
+        tmp = v.split('?')
+        for t in tmp:
+            sentencesInterroPoint.append(t)
+
+    sentences = []
+    for s in sentencesInterroPoint:
+        # on considère les phrases exclamatives si elles font la longueur d'un vers
+        sentencesExclam = s.split('!\n')
+        for t in sentencesExclam:
+            sentences.append(t)
+
+    return sentences
+
+# def concatSentences(sentences):
+#     nbSentences = len(sentences)
+#     for i in range(nbSentences-1):
+#         print(nbSentences)
+#         print(i)
+#         nbWords =  len(re.findall(r"[\w']+", sentences[i]))
+#         if nbWords < NB_WORDS_MIN_EXTRACT:
+#             sentences[i] += sentences[i+1]
+#             del sentences[i+1]
+#             nbSentences-=1
+#             i-=1
+
+def makeExtract(sentences):
+    extract = ""
+    for i in range(len(sentences)):
+        nbWords =  len(re.findall(r"[\w']+", extract))
+        nbWordsSentence = len(re.findall(r"[\w']+", sentences[i]))
+
+        if nbWordsSentence > NB_WORDS_MAX_EXTRACT or nbWords > NB_WORDS_MIN_EXTRACT:
+            break
+
+        extract+= " "+sentences[i]
+       
+    return extract        
+
+def makeExtracts(sentences):
+    extracts = []
+    for i in range(len(sentences)):
+        extracts.append(makeExtract(sentences[i:]))
+
+    return extracts
+
+
+def getExtract(poemName, ):
+    path = "../res/poems/"+poemName
+    with open(path, "r", encoding="utf-8") as file:
+        rawContent = file.read()
+        sentences = getSentences(rawContent)
+        extracts = makeExtracts (sentences)
+
+        id = getBestTextId(extracts, wantedWords)
+
+        print(extracts[id])
+
+
+    return extracts
+
+
+
+poemName = getPoemName()
 # poemTxt = getPoemTxt(poemId)
 
-print("selectedPoem : "+str(poemId))
+print("selectedPoem : "+str(poemName))
+getExtract(poemName)
+# print("extrait : "+)
 
 # extract = " \n".join(poemTxt.split('\n')[2:7])
 
-# op('out').par.text =poemId
+# op('out').par.text =poemName
 # op('../selectedPoem').text = extract
 
 
