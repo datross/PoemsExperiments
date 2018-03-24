@@ -15,7 +15,7 @@ NB_WORDS_MIN_EXTRACT = 20
 NB_WORDS_MAX_EXTRACT = 40
 mappedWords={}
 poemIDs = []
-wantedWords = ["beau", "soir"]
+wantedWords = ["bonsoir", "marge", "amer"]
 # wantedWords = getWantedWord()
 
 
@@ -134,8 +134,14 @@ def getSentences(text):
         for t in tmp:
             sentencesInterroPoint.append(t)
 
+    sentencesInterroPointSemicolon = []
+    for v in sentencesPoints:
+        tmp = v.split(';\n')
+        for t in tmp:
+            sentencesInterroPointSemicolon.append(t)
+
     sentences = []
-    for s in sentencesInterroPoint:
+    for s in sentencesInterroPointSemicolon:
         # on considère les phrases exclamatives si elles font la longueur d'un vers
         sentencesExclam = s.split('!\n')
         for t in sentencesExclam:
@@ -156,8 +162,8 @@ def getSentences(text):
 #             i-=1
 
 def makeExtract(sentences):
-    extract = ""
-    for i in range(len(sentences)):
+    extract = sentences[0]
+    for i in range(1, len(sentences)):
         nbWords =  len(re.findall(r"[\w']+", extract))
         nbWordsSentence = len(re.findall(r"[\w']+", sentences[i]))
 
@@ -184,11 +190,11 @@ def getExtract(poemName, ):
         extracts = makeExtracts (sentences)
 
         id = getBestTextId(extracts, wantedWords)
-
+        print(extracts)
         print(extracts[id])
 
 
-    return extracts
+    return extracts[id]
 
 
 
