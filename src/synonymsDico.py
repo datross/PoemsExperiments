@@ -1,3 +1,5 @@
+
+
 class Word:
     def __init__(self, word, nature, synonyms):
         self.word = word
@@ -61,7 +63,7 @@ def parseDicoSyno(path):
            dico[i].linkSynonyms(dico)
         return dico
 
-dico = parseDicoSyno('../res/dico/synonymes.dat')
+dico = parseDicoSyno('synonymes.dat')
 
 def getSynonyms(s):
     if s in dico:

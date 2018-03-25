@@ -397,7 +397,7 @@ def testGetOrientation(n):
 
 # testGetOrientation(10)
 
-nb_train = 100
-nb_test = 200
-learnShape(nb_train)
-testShape(nb_test)
+# nb_train = 100
+# nb_test = 200
+# learnShape(nb_train)
+# testShape(nb_test)

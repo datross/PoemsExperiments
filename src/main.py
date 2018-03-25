@@ -7,33 +7,50 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 import glob
 import numpy as np
-import synonymsDico
+# import synonymsDico
 
+RES_PATH = "./python/res"
 POEM_CHOICE_PROBA_THRESHOLD = 1.5
 MIN_DIFF_SYNONYMS_PASS = 1.1
 NB_WORDS_MIN_EXTRACT = 20
 NB_WORDS_MAX_EXTRACT = 40
-mappedWords={}
+# mappedWords={}
 poemIDs = []
-wantedWords = ["bonsoir", "marge", "amer"]
-# wantedWords = getWantedWord()
+# wantedWords = ["bonsoir", "marge", "amer"]
+wantedWords = []
+# poemFiles = []
 
+
+def loadWantedWord():
+    tab = op('../wantedWords')
+
+    for i in range(tab.numRows):
+        s = str(tab[i, 0])
+        wantedWords.append(s)
+
+
+# def loadPoemFiles():
+#     tab =  op('poems_files')
+
+#     for i in range(1, tab.numRows):
+#         s = str(tab[i, 1])
+#         poemFiles.append(s)
 
 def loadPoems():
     # global poemIDs
-    global mappedWords
+    # global mappedWords
     poems = []
     paths = []
-    for i, path in enumerate(glob.glob("../res/poems/*")):
+    for i, path in enumerate(glob.glob(RES_PATH+'/poems/*')):
         paths.append(path)
         file = open(path, "r", encoding="utf-8")
         poem = file.read()
         poems.append(poem)
         poemIDs.append(i)
-        words =  re.findall(r"[\w']+", poem)
-        for w in words:
-            if w:
-                mappedWords[w.lower()] = i
+        # words =  re.findall(r"[\w']+", poem)
+        # for w in words:
+        #     if w:
+        #         mappedWords[w.lower()] = i
 
         file.close()
     return poems, paths
@@ -47,15 +64,6 @@ def loadPoems():
 #         vectorizers.append(c)
 #     return vectorizers
 
-def getWantedWord():
-    tab = op('../wantedWords')
-    words = []
-
-    for i in range(tab.numRows):
-        s = str(tab[i, 0])
-        words.append(s)
-
-    return words
 
 def isGoodPrediction(moy, maxi):
     print("len "+str(len(moy)))
@@ -84,8 +92,13 @@ def addSynonyms(vocab):
 
 def getBestTextId(texts, wantedWords):
     vec = TfidfVectorizer()
-    
+    # textsTmp = list(texts)
     X = vec.fit_transform(texts)
+    # textsTmp.insert(0, wantedWords)
+    # tf_transformer = TfidfTransformer(use_idf=False).fit(X)
+
+    # merde =linear_kernel(X[0:1], X).flatten()
+
     vocabIds = []
     for w in wantedWords:
         id = vec.vocabulary_.get(w)
@@ -96,7 +109,9 @@ def getBestTextId(texts, wantedWords):
     wantedWordsMatrix = textsMatrix[:,vocabIds]
     wantedWordsMatrixSum = np.sum(wantedWordsMatrix, axis=1)
 
+
     id = np.argmax(wantedWordsMatrixSum)
+    print(id)
     return id
 
 
@@ -107,12 +122,12 @@ def getPoemName():
     
     id = getBestTextId(poems, wantedWords)
 
-    poem = paths[id].replace("../res/poems\\", '')
+    poem = paths[id].replace(RES_PATH+"/poems\\", '')
 
     return poem
 
 def getPoemTxt(id):
-    path = glob.glob("../res/poems/musset_"+str(id)+".txt")[0]
+    path = glob.glob(RES_PATH+"/poems/musset_"+str(id)+".txt")[0]
     file = open(path, "r", encoding="utf-8")
     poem = file.read()
     file.close()
@@ -149,18 +164,6 @@ def getSentences(text):
 
     return sentences
 
-# def concatSentences(sentences):
-#     nbSentences = len(sentences)
-#     for i in range(nbSentences-1):
-#         print(nbSentences)
-#         print(i)
-#         nbWords =  len(re.findall(r"[\w']+", sentences[i]))
-#         if nbWords < NB_WORDS_MIN_EXTRACT:
-#             sentences[i] += sentences[i+1]
-#             del sentences[i+1]
-#             nbSentences-=1
-#             i-=1
-
 def makeExtract(sentences):
     extract = sentences[0]
     for i in range(1, len(sentences)):
@@ -182,33 +185,29 @@ def makeExtracts(sentences):
     return extracts
 
 
-def getExtract(poemName, ):
-    path = "../res/poems/"+poemName
+def getExtract(poemName ):
+    path = RES_PATH+"/poems/"+poemName
     with open(path, "r", encoding="utf-8") as file:
         rawContent = file.read()
         sentences = getSentences(rawContent)
         extracts = makeExtracts (sentences)
 
         id = getBestTextId(extracts, wantedWords)
-        print(extracts)
+        print(id)
         print(extracts[id])
-
 
     return extracts[id]
 
 
-
+loadWantedWord()
+# loadPoemFiles()
 poemName = getPoemName()
-# poemTxt = getPoemTxt(poemId)
 
 print("selectedPoem : "+str(poemName))
-getExtract(poemName)
-# print("extrait : "+)
+extract = getExtract(poemName)
 
-# extract = " \n".join(poemTxt.split('\n')[2:7])
-
-# op('out').par.text =poemName
-# op('../selectedPoem').text = extract
+op('out').par.text =poemName
+op('../selectedPoem').text = extract
 
 
 

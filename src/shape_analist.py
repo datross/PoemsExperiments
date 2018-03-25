@@ -8,7 +8,10 @@ CENTER_THRESHOLD = 0.1
 STRAIGHT_THRESHOLD = 0.1
 DISTANT_THRESHOLD = 0.5
 CLOSE_THRESHOLD = 0.2
-IMG_PATH = "../res/images/sceneShape.jpg"
+CORNER_THRESHOLD = 0.4
+
+IMG_PATH = "./python/res/images/sceneShape.jpg"
+POSITIONS =[]
 
 CHARA_MAPPING = cvp.getCharacteristiqueMapping()
 
@@ -28,6 +31,11 @@ def dist(positions):
 
     return somDist / len(positions)
 
+
+def loadPositions():
+	tab = op('project1/positions')
+	for i in range(tab.numRows):
+		POSITIONS.append((Center(tab[i, 0], tab[i, 1]), tab[i, 2]))
 
 def getSpaceChara(coords):
     points = [(c.x, c.y) for c in coords]
@@ -50,6 +58,11 @@ def getSpaceChara(coords):
     elif center.y < CENTER_THRESHOLD:
         chara.append('sud')
 
+    if abs(center.x) > CORNER_THRESHOLD and abs(center.y) > CORNER_THRESHOLD:
+    	chara.append('coin')
+    elif abs(center.x) > CORNER_THRESHOLD or abs(center.y) > CORNER_THRESHOLD:
+    	chara.append('mur')
+
     return chara
 
 
@@ -64,6 +77,7 @@ def getDistanceChara(coords):
 
 def getOrientationChara(coords):
 	cds = list(coords)
+
 	if cds[1].x < cds[0].x:
 		tmp = cds[0]
 		cds[0] = cds[1]
@@ -153,11 +167,12 @@ def testGetOrientation(n):
         cn.plt.title("orientation: " + str(orientation))
         cn.plt.show()
 
-c1 = (0, 1, 0)
-c2 = (-1, 0, 0)
-c3 = (0, 1, 0)
-
-cara = getVocabulary(IMG_PATH, [c1, c2])
+# c1 = (0, 1, 0)
+# c2 = (-1, 0, 0)
+# c3 = (0, 1, 0)
+loadPositions()
+print(positions)
+cara = getVocabulary(IMG_PATH, POSITIONS)
 # print(dist(c1, c2, c3))
 print(cara)
 
