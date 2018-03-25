@@ -294,8 +294,8 @@ def displayShapes(shapes, n):
 clfShape = None
 clfOrientation = None
 
-displayShapes(SHAPES, 2)
-displayOrientations(ORIENTATIONS, 20)
+# displayShapes(SHAPES, 2)
+# displayOrientations(ORIENTATIONS, 20)
 
 
 def arrayDirac(size, i):
