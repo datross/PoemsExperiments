@@ -185,8 +185,8 @@ def translateInLimits(coords, xmax, ymax):
 
 def fitToFrame(coords, w, h):
     bb = boundingBox(coords)
-    bbw = bb[2] - bb[0] + 1
-    bbh = bb[3] - bb[1] + 1
+    bbw = bb[2] - bb[0]
+    bbh = bb[3] - bb[1]
     scale_factor = min(w / bbw, h / bbh)
     scale(coords, scale_factor)
     bb = boundingBox(coords)
@@ -233,6 +233,7 @@ def rasterizeCoords(coords, w, h):
 def generateFromShape(shape, rasterize=True):
     coords = displaceRotateScaleTranslateInFrame(
         canoniqueShape(shape, fractal=1.), WIDTH, HEIGHT)
+    # fitToFrame(coords, WIDTH, HEIGHT)
 
     image = rasterizeCoords(coords, WIDTH, HEIGHT)
     if not rasterize:
@@ -275,7 +276,7 @@ def displayShapes(shapes, n):
     for i in range(n):
         forme = np.random.randint(0, len(shapes))
         coords, image = generateFromShape(shapes[forme], rasterize=False)
-        fitToFrame(coords, WIDTH, HEIGHT)
+        # fitToFrame(coords, WIDTH, HEIGHT)
         image = rasterizeCoords(coords, WIDTH, HEIGHT)
         plt.imshow(image)
         plt.title(shapes[forme])
@@ -293,8 +294,8 @@ def displayShapes(shapes, n):
 clfShape = None
 clfOrientation = None
 
-# displayShapes(SHAPES, 20)
-# displayOrientations(ORIENTATIONS, 20)
+displayShapes(SHAPES, 2)
+displayOrientations(ORIENTATIONS, 20)
 
 
 def arrayDirac(size, i):
@@ -415,7 +416,7 @@ def testGetOrientation(n):
 
 # testGetOrientation(10)
 
-# nb_train = 100
+# nb_train = 2
 # nb_test = 200
 # learnShape(nb_train)
 # testShape(nb_test)
