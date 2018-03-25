@@ -7,7 +7,7 @@ from center import Center
 
 WIDTH = 128
 HEIGHT = 128
-SHAPES = ["triangle", "carre"]#, "rectangle", "losange", "fleche"
+SHAPES = ["triangle", "carre", "rectangle", "losange", "fleche"]
 ORIENTATIONS = ["vertical", "horizontal", "oblique-droit", "oblique-gauche"]
 
 # fonctions utilitaires généralistes
@@ -170,9 +170,6 @@ def scaleInLimits(coords, xmax, ymax, aire_min):
     scale(coords, scale_factor)
     return coords
 
-def fitToFrame(coords, w, h):
-    bb = boundingBox(coords)
-
 
 def translateInLimits(coords, xmax, ymax):
     """Place la forme en restant dans le cadre donné."""
@@ -184,6 +181,18 @@ def translateInLimits(coords, xmax, ymax):
     t = (random(txmin, txmax), random(tymin, tymax))
     displace(coords, t)
     return coords
+
+
+def fitToFrame(coords, w, h):
+    bb = boundingBox(coords)
+    bbw = bb[2] - bb[0] + 1
+    bbh = bb[3] - bb[1] + 1
+    scale_factor = min(w / bbw, h / bbh)
+    scale(coords, scale_factor)
+    bb = boundingBox(coords)
+    bbw = bb[2] - bb[0] + 1
+    bbh = bb[3] - bb[1] + 1
+    displace(coords, (w/2 - bbw/2 - bb[0], h/2 - bbh/2 - bb[1]))
 
 
 # génération des formes
@@ -203,22 +212,29 @@ def displaceRotateScaleTranslateInFrame(coords,
     displace(coords, displacement)
     # rotation aléatoire
     rotate(coords, angle if angle else random(0, 2 * np.pi))
-    # scale aléatoire avec boundingBox plus petite inférieure aux limites
-    scaleInLimits(coords, xmax, ymax, aire_min)
-    # placement aléatoire dans la frame
-    translateInLimits(coords, xmax, ymax)
-    # enfin on a notre forme
+    # Inutile maintenant
+    # # scale aléatoire avec boundingBox plus petite inférieure aux limites
+    # scaleInLimits(coords, xmax, ymax, aire_min)
+    # # placement aléatoire dans la frame
+    # translateInLimits(coords, xmax, ymax)
+    fitToFrame(coords, xmax, ymax)
+    # # enfin on a notre forme
     return coords
+
+
+def rasterizeCoords(coords, w, h):
+    image = np.zeros((h, w))
+    rasterized = draw.polygon(coords[0], coords[1])
+    # print(coords)
+    image[rasterized[0], rasterized[1]] = 1.
+    return image
 
 
 def generateFromShape(shape, rasterize=True):
     coords = displaceRotateScaleTranslateInFrame(
         canoniqueShape(shape, fractal=1.), WIDTH, HEIGHT)
 
-    image = np.zeros((HEIGHT, WIDTH))
-    rasterized = draw.polygon(coords[0], coords[1])
-    # print(coords)
-    image[rasterized[0], rasterized[1]] = 1.
+    image = rasterizeCoords(coords, WIDTH, HEIGHT)
     if not rasterize:
         return coords, image
     return image
@@ -258,7 +274,9 @@ def reformatImage(image):
 def displayShapes(shapes, n):
     for i in range(n):
         forme = np.random.randint(0, len(shapes))
-        image = generateFromShape(shapes[forme])
+        coords, image = generateFromShape(shapes[forme], rasterize=False)
+        fitToFrame(coords, WIDTH, HEIGHT)
+        image = rasterizeCoords(coords, WIDTH, HEIGHT)
         plt.imshow(image)
         plt.title(shapes[forme])
         plt.show()
@@ -275,7 +293,7 @@ def displayShapes(shapes, n):
 clfShape = None
 clfOrientation = None
 
-# displayShapes(shapes, 20)
+# displayShapes(SHAPES, 20)
 # displayOrientations(ORIENTATIONS, 20)
 
 
