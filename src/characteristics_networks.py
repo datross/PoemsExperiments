@@ -2,7 +2,9 @@ from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPClassifier
 from skimage import draw
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+import os.path
+from sklearn.externals import joblib
 from center import Center
 
 WIDTH = 128
@@ -278,9 +280,9 @@ def displayShapes(shapes, n):
         coords, image = generateFromShape(shapes[forme], rasterize=False)
         # fitToFrame(coords, WIDTH, HEIGHT)
         image = rasterizeCoords(coords, WIDTH, HEIGHT)
-        plt.imshow(image)
-        plt.title(shapes[forme])
-        plt.show()
+        # plt.imshow(image)
+        # plt.title(shapes[forme])
+        # plt.show()
 
 
 # def displayOrientations(orientations, n):
@@ -352,10 +354,10 @@ def testShape(nb_test):
         result = clfShape.predict_proba([reformatImage(image)])
         if np.argmax(result[0]) == forme:
             score += 1.
-        if i < 10:
-            plt.imshow(image)
-            plt.title(SHAPES[np.argmax(result[0])]+" "+str(result))
-            plt.show()
+        # if i < 10:
+            # plt.imshow(image)
+            # plt.title(SHAPES[np.argmax(result[0])]+" "+str(result))
+            # plt.show()
 
     score /= nb_test
     print("Score sur " + str(nb_test) + " samples : " + str(score))
@@ -409,14 +411,22 @@ def testGetOrientation(n):
             int(HEIGHT / 2 + 32. * line_dir[1]))
         image[line[0], line[1]] = 2.
 
-        plt.imshow(image)
-        plt.title("pca: " + str(orientation))
-        plt.show()
+        # plt.imshow(image)
+        # plt.title("pca: " + str(orientation))
+        # plt.show()
 
 
 # testGetOrientation(10)
 
-# nb_train = 2
-# nb_test = 200
-# learnShape(nb_train)
-# testShape(nb_test)
+
+nb_train = 5000
+nb_test = 200
+
+if os.path.isfile("networksWeight.pkl") :
+    clfShape = joblib.load("networksWeight.pkl")
+else:
+    learnShape(nb_train)
+    
+testShape(nb_test)
+
+joblib.dump(clfShape, 'networksWeight.pkl')
