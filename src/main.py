@@ -9,15 +9,17 @@ import glob
 import numpy as np
 # import synonymsDico
 
-RES_PATH = "./python/res"
+# RES_PATH = "./python/res"
+RES_PATH = "../res"
 POEM_CHOICE_PROBA_THRESHOLD = 1.5
 MIN_DIFF_SYNONYMS_PASS = 1.1
 NB_WORDS_MIN_EXTRACT = 20
 NB_WORDS_MAX_EXTRACT = 40
 # mappedWords={}
 poemIDs = []
-# wantedWords = ["bonsoir", "marge", "amer"]
-wantedWords = []
+wantedWords = ["bonsoir", "marge", "amer"]
+
+# wantedWords = []
 # poemFiles = []
 
 
@@ -36,12 +38,13 @@ def loadWantedWord():
 #         s = str(tab[i, 1])
 #         poemFiles.append(s)
 
+
 def loadPoems():
     # global poemIDs
     # global mappedWords
     poems = []
     paths = []
-    for i, path in enumerate(glob.glob(RES_PATH+'/poems/*')):
+    for i, path in enumerate(glob.glob(RES_PATH + '/poems/*')):
         paths.append(path)
         file = open(path, "r", encoding="utf-8")
         poem = file.read()
@@ -66,28 +69,29 @@ def loadPoems():
 
 
 def isGoodPrediction(moy, maxi):
-    print("len "+str(len(moy)))
+    print("len " + str(len(moy)))
     if len(moy) < 2:
         val = maxi[0] / moy[0]
         print(val)
         return val > POEM_CHOICE_PROBA_THRESHOLD
 
-    oldVal = maxi[len(maxi)-2] / moy[len(moy)-2] 
-    newVal = maxi[len(maxi)-1] / moy[len(moy)-1] 
+    oldVal = maxi[len(maxi) - 2] / moy[len(moy) - 2]
+    newVal = maxi[len(maxi) - 1] / moy[len(moy) - 1]
     # si l'ajout des synonyme n'a plus d'impact on arret
     if newVal / oldVal < MIN_DIFF_SYNONYMS_PASS:
-        return True;
+        return True
     return newVal > POEM_CHOICE_PROBA_THRESHOLD
-    
+
+
 def addSynonyms(vocab):
-    # A chaque passe on ajoute un synonyme de chaque mot du vocab 
+    # A chaque passe on ajoute un synonyme de chaque mot du vocab
     # On verifie avant que le synonyme ne soit pas present dans le vocab
     for w in vocab:
         synos = synonymsDico.getSynonyms(w)
-        for s in synos: 
+        for s in synos:
             if s not in vocab:
                 vocab.append(s)
-                return;
+                return
 
 
 def getBestTextId(texts, wantedWords):
@@ -106,11 +110,16 @@ def getBestTextId(texts, wantedWords):
             vocabIds.append(id)
     # print(vec.get_feature_names())
     textsMatrix = X.toarray()
-    wantedWordsMatrix = textsMatrix[:,vocabIds]
+    wantedWordsMatrix = textsMatrix[:, vocabIds]
+    wantedWordsMatrixSign = np.sign(wantedWordsMatrix)
     wantedWordsMatrixSum = np.sum(wantedWordsMatrix, axis=1)
+    wantedWordsMatrixSignSum = np.sum(wantedWordsMatrixSign, axis=1)
 
+    rank = np.argsort(wantedWordsMatrixSum)
+    rankSum = np.argsort(wantedWordsMatrixSignSum)
 
-    id = np.argmax(wantedWordsMatrixSum)
+    # id = np.argmax(wantedWordsMatrixSum)
+    id = np.argmax(rank + rankSum)
     print(id)
     return id
 
@@ -119,15 +128,17 @@ def getPoemName():
     global poemIDs
 
     poems, paths = loadPoems()
-    
+
     id = getBestTextId(poems, wantedWords)
 
-    poem = paths[id].replace(RES_PATH+"/poems\\", '')
+    # poem = paths[id].replace(RES_PATH + "/poems\\", '')
+    poem = paths[id].replace(RES_PATH + "/poems/", '')
 
     return poem
 
+
 def getPoemTxt(id):
-    path = glob.glob(RES_PATH+"/poems/musset_"+str(id)+".txt")[0]
+    path = glob.glob(RES_PATH + "/poems/musset_" + str(id) + ".txt")[0]
     file = open(path, "r", encoding="utf-8")
     poem = file.read()
     file.close()
@@ -164,18 +175,20 @@ def getSentences(text):
 
     return sentences
 
+
 def makeExtract(sentences):
     extract = sentences[0]
     for i in range(1, len(sentences)):
-        nbWords =  len(re.findall(r"[\w']+", extract))
+        nbWords = len(re.findall(r"[\w']+", extract))
         nbWordsSentence = len(re.findall(r"[\w']+", sentences[i]))
 
         if nbWordsSentence > NB_WORDS_MAX_EXTRACT or nbWords > NB_WORDS_MIN_EXTRACT:
             break
 
-        extract+= " "+sentences[i]
-       
-    return extract        
+        extract += " " + sentences[i]
+
+    return extract
+
 
 def makeExtracts(sentences):
     extracts = []
@@ -185,12 +198,12 @@ def makeExtracts(sentences):
     return extracts
 
 
-def getExtract(poemName ):
-    path = RES_PATH+"/poems/"+poemName
+def getExtract(poemName):
+    path = RES_PATH + "/poems/" + poemName
     with open(path, "r", encoding="utf-8") as file:
         rawContent = file.read()
         sentences = getSentences(rawContent)
-        extracts = makeExtracts (sentences)
+        extracts = makeExtracts(sentences)
 
         id = getBestTextId(extracts, wantedWords)
         print(id)
@@ -199,17 +212,12 @@ def getExtract(poemName ):
     return extracts[id]
 
 
-loadWantedWord()
+# loadWantedWord()
 # loadPoemFiles()
 poemName = getPoemName()
 
-print("selectedPoem : "+str(poemName))
+print("selectedPoem : " + str(poemName))
 extract = getExtract(poemName)
 
-op('out').par.text =poemName
-op('../selectedPoem').text = extract
-
-
-
-
-
+# op('out').par.text =poemName
+# op('../selectedPoem').text = extract

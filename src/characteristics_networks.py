@@ -108,6 +108,8 @@ def canoniqueFleche(fractal=0.):
 
 
 def canoniqueShape(shape, fractal=0.):
+    """Pour ajouter une shape, rajouter une condition ici avec sa fonction
+    canonique."""
     if shape == "carre":
         return canoniqueCarre()
     elif shape == "rectangle":
