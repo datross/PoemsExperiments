@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 import glob
 import numpy as np
-# import synonymsDico
+import synonymsDico
 
 # RES_PATH = "./python/res"
 RES_PATH = "../res"
@@ -17,7 +17,7 @@ NB_WORDS_MIN_EXTRACT = 20
 NB_WORDS_MAX_EXTRACT = 40
 # mappedWords={}
 poemIDs = []
-wantedWords = ["bonsoir", "marge", "amer"]
+wantedWords = ["bonsoir", "marge"]
 
 # wantedWords = []
 # poemFiles = []
@@ -83,19 +83,24 @@ def isGoodPrediction(moy, maxi):
     return newVal > POEM_CHOICE_PROBA_THRESHOLD
 
 
-def addSynonyms(vocab):
+def addSynonyms(vocabBase, vocabExtended):
     # A chaque passe on ajoute un synonyme de chaque mot du vocab
     # On verifie avant que le synonyme ne soit pas present dans le vocab
-    for w in vocab:
+    addedSomething = False
+    for w in vocabBase:
         synos = synonymsDico.getSynonyms(w)
         for s in synos:
-            if s not in vocab:
-                vocab.append(s)
-                return
+            if s not in vocabExtended:
+                vocabExtended.append(s)
+                addedSomething = True
+                print("added: " + s)
+                break
+    return addedSomething
 
 
 def getBestTextId(texts, wantedWords):
-    vec = TfidfVectorizer()
+    # vec = TfidfVectorizer()
+    vec = CountVectorizer()
     # textsTmp = list(texts)
     X = vec.fit_transform(texts)
     # textsTmp.insert(0, wantedWords)
@@ -106,21 +111,39 @@ def getBestTextId(texts, wantedWords):
     vocabIds = []
     for w in wantedWords:
         id = vec.vocabulary_.get(w)
-        if id:
+        if id is not None:
+            print(w)
             vocabIds.append(id)
-    # print(vec.get_feature_names())
+    if vocabIds == []:
+        # aucun mot dans tous les poèmes
+        return 0, False
+
     textsMatrix = X.toarray()
     wantedWordsMatrix = textsMatrix[:, vocabIds]
     wantedWordsMatrixSign = np.sign(wantedWordsMatrix)
     wantedWordsMatrixSum = np.sum(wantedWordsMatrix, axis=1)
     wantedWordsMatrixSignSum = np.sum(wantedWordsMatrixSign, axis=1)
 
-    rank = np.argsort(wantedWordsMatrixSum)
-    rankSum = np.argsort(wantedWordsMatrixSignSum)
+    rank = np.argsort(np.argsort(wantedWordsMatrixSum))
+    rankSum = np.argsort(np.argsort(wantedWordsMatrixSignSum))
 
-    # id = np.argmax(wantedWordsMatrixSum)
-    id = np.argmax(rank + rankSum)
+    id = np.argmax(rankSum + rank)
     print(id)
+    return id, True
+
+
+def getBestTextIdWrapperSyno(texts, vocab):
+    global wantedWords
+    # if "adieu" in vocab:
+    #     print(texts)
+    id, existence = getBestTextId(texts, vocab)
+    vocabExtended = [str(w) for w in vocab]
+    while not existence:
+        if not addSynonyms(vocab, vocabExtended):  # plus aucun de synonyme
+            print("PLUS AUCUN SYNONYMES")
+            break
+        id, existence = getBestTextId(texts, vocabExtended)
+    wantedWords = vocabExtended
     return id
 
 
@@ -129,7 +152,7 @@ def getPoemName():
 
     poems, paths = loadPoems()
 
-    id = getBestTextId(poems, wantedWords)
+    id = getBestTextIdWrapperSyno(poems, wantedWords)
 
     # poem = paths[id].replace(RES_PATH + "/poems\\", '')
     poem = paths[id].replace(RES_PATH + "/poems/", '')
@@ -205,12 +228,11 @@ def getExtract(poemName):
         sentences = getSentences(rawContent)
         extracts = makeExtracts(sentences)
 
-        id = getBestTextId(extracts, wantedWords)
+        id, existence = getBestTextId(extracts, wantedWords)
         print(id)
         print(extracts[id])
 
     return extracts[id]
-
 
 # loadWantedWord()
 # loadPoemFiles()
