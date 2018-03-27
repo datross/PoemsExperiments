@@ -7,19 +7,22 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 import glob
 import numpy as np
-import synonymsDico
+from importlib.machinery import SourceFileLoader
+# import synonymsDico
 
-# RES_PATH = "./python/res"
-RES_PATH = "../res"
+synonymsDico = SourceFileLoader("synonymsDico", r"C:\Users\Antoine\Desktop\ProjetPrePro\maquette\python\src/synonymsDico.py").load_module()
+
+RES_PATH = "./python/res"
+# RES_PATH = "../res"
 POEM_CHOICE_PROBA_THRESHOLD = 1.5
 MIN_DIFF_SYNONYMS_PASS = 1.1
 NB_WORDS_MIN_EXTRACT = 20
 NB_WORDS_MAX_EXTRACT = 40
 # mappedWords={}
 poemIDs = []
-wantedWords = ["bonsoir", "marge"]
+# wantedWords = ["bonsoir", "marge"]
 
-# wantedWords = []
+wantedWords = []
 # poemFiles = []
 
 
@@ -154,8 +157,8 @@ def getPoemName():
 
     id = getBestTextIdWrapperSyno(poems, wantedWords)
 
-    # poem = paths[id].replace(RES_PATH + "/poems\\", '')
-    poem = paths[id].replace(RES_PATH + "/poems/", '')
+    poem = paths[id].replace(RES_PATH + "/poems\\", '')
+    # poem = paths[id].replace(RES_PATH + "/poems/", '')
 
     return poem
 
@@ -184,7 +187,7 @@ def getSentences(text):
             sentencesInterroPoint.append(t)
 
     sentencesInterroPointSemicolon = []
-    for v in sentencesPoints:
+    for v in sentencesInterroPoint:
         tmp = v.split(';\n')
         for t in tmp:
             sentencesInterroPointSemicolon.append(t)
@@ -234,12 +237,11 @@ def getExtract(poemName):
 
     return extracts[id]
 
-# loadWantedWord()
-# loadPoemFiles()
+loadWantedWord()
 poemName = getPoemName()
 
 print("selectedPoem : " + str(poemName))
 extract = getExtract(poemName)
 
-# op('out').par.text =poemName
-# op('../selectedPoem').text = extract
+op('out').par.text =poemName
+op('../selectedPoem').text = extract

@@ -63,7 +63,7 @@ def parseDicoSyno(path):
            dico[i].linkSynonyms(dico)
         return dico
 
-dico = parseDicoSyno('../res/dico/synonymes.dat')
+dico = parseDicoSyno('./python/res/dico/synonymes.dat')
 
 def getSynonyms(s):
     if s in dico:

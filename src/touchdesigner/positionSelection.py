@@ -25,7 +25,7 @@ def circular_order(centers):
 
 	center = np.mean(points, axis=0)
 	center = Center(center[0], center[1])
-	print(center)
+	# print(center)
 	points = []
 	
 	for i, (c,f) in enumerate(centers):
@@ -50,8 +50,8 @@ for p in prims:
 		centers.append((p.center, fat))
 
 table.setSize(len(centers), 3)
-
-centers = circular_order(centers)
+if len(centers)>0:
+	centers = circular_order(centers)
 
 #file.write(line)
 for i, (c, f) in enumerate(centers):	
@@ -62,4 +62,4 @@ for i, (c, f) in enumerate(centers):
 
 
 		
-op('createNodes').run()
+# op('createNodes').run()
