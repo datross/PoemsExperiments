@@ -352,14 +352,15 @@ def testShape(nb_test):
     score = 0
     for i in range(nb_test):
         forme = np.random.randint(0, len(SHAPES), dtype=int)
-        image = generateFromShape(SHAPES[forme])
+        coords, image = generateFromShape(SHAPES[forme], rasterize=False)
+        # print(coords)
         result = clfShape.predict_proba([reformatImage(image)])
         if np.argmax(result[0]) == forme:
             score += 1.
         # if i < 10:
-            # plt.imshow(image)
-            # plt.title(SHAPES[np.argmax(result[0])]+" "+str(result))
-            # plt.show()
+        #     plt.imshow(image)
+        #     plt.title(SHAPES[np.argmax(result[0])]+" "+str(result))
+        #     plt.show()
 
     score /= nb_test
     print("Score sur " + str(nb_test) + " samples : " + str(score))
@@ -367,11 +368,17 @@ def testShape(nb_test):
     return score
 
 
-def getShape(img):
+def getShape(coords):
     global clfShape
     global SHAPES
-    result = clfShape.predict([reformatImage(img)])
-    return SHAPES[int(round(result[0]))]
+    
+    X = [c.x for c in coords]
+    Y = [c.y for c in coords]
+    crds = (X, Y)
+    fitToFrame(crds, WIDTH, HEIGHT)
+    image = rasterizeCoords(crds, WIDTH, HEIGHT)
+    result = clfShape.predict([reformatImage(image)])
+    return SHAPES[int(round(np.argmax(result[0])))]
 
 
 def getOrientation(coords):
@@ -421,8 +428,8 @@ def testGetOrientation(n):
 # testGetOrientation(10)
 
 
-nb_train = 5000
-nb_test = 200
+nb_train = 50
+nb_test = 5
 
 if os.path.isfile("networksWeight.pkl") :
     clfShape = joblib.load("networksWeight.pkl")

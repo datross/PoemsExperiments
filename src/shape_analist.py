@@ -1,8 +1,10 @@
-import characteristics_networks as cn
-import characteristics_vocab_parser as cvp
 import math
 import numpy as np
 from center import Center
+from importlib.machinery import SourceFileLoader
+
+cn = SourceFileLoader("characteristics_networks", r"C:\Users\Antoine\Desktop\ProjetPrePro\maquette\python\src/characteristics_networks.py").load_module()
+cvp = SourceFileLoader("characteristics_vocab_parser", r"C:\Users\Antoine\Desktop\ProjetPrePro\maquette\python\src/characteristics_vocab_parser.py").load_module()
 
 CENTER_THRESHOLD = 0.1
 STRAIGHT_THRESHOLD = 0.1
@@ -14,11 +16,20 @@ IMG_PATH = "./python/res/images/sceneShape.jpg"
 POSITIONS =[]
 
 CHARA_MAPPING = cvp.getCharacteristiqueMapping()
+table = op('wantedWords')
+
 
 # utility functions
 def distTwoPoint(p1, p2):
     return math.sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2))
 
+# def selectCharaMapping():
+#     global CHARA_MAPPING
+#     ids = np.random.randint(0, len(CHARA_MAPPING), int(len(CHARA_MAPPING)*0.25), dtype=int)
+#     charas = []
+#     for i in ids:
+#         charas.append(CHARA_MAPPING[i])
+#     CHARA_MAPPING= charas
 
 def dist(positions):
     somDist = 0
@@ -32,10 +43,12 @@ def dist(positions):
     return somDist / len(positions)
 
 
+
 def loadPositions():
-	tab = op('project1/positions')
-	for i in range(tab.numRows):
-		POSITIONS.append((Center(tab[i, 0], tab[i, 1]), tab[i, 2]))
+    global POSITIONS
+    tab = op('/project1/positions')
+    for i in range(tab.numRows):
+        POSITIONS.append((tab[i, 0], tab[i, 1], tab[i, 2]))
 
 def getSpaceChara(coords):
     points = [(c.x, c.y) for c in coords]
@@ -45,7 +58,7 @@ def getSpaceChara(coords):
     chara = []
 
     if abs(center.x) < CENTER_THRESHOLD and abs(center.y) < CENTER_THRESHOLD:
-        chara.append('centré')
+        chara.append('centre')
         return chara
 
     if center.x > CENTER_THRESHOLD:
@@ -69,11 +82,11 @@ def getSpaceChara(coords):
 def getDistanceChara(coords):
 	distance = dist(coords) 
 	if distance < CLOSE_THRESHOLD : 
-		return 'rapproché'
+		return 'rapproche'
 	if distance > CLOSE_THRESHOLD and distance < DISTANT_THRESHOLD:
 		return 'distance-moyenne'
 
-	return 'éloigné'
+	return 'eloigne'
 
 def getOrientationChara(coords):
 	cds = list(coords)
@@ -95,7 +108,7 @@ def getOrientationChara(coords):
 def analyseEasyShape(coords):
 	characterists = []
 	# s'il y a qu'une seul position
-	if len(coords) == 1: 
+	if len(coords) <= 1: 
 		characterists.append('point')
 	# s'il y a deux positions
 	else:
@@ -104,29 +117,28 @@ def analyseEasyShape(coords):
 
 	return characterists
 
-def analyseComplexeShape(img, coords):
+def analyseComplexeShape( coords):
 	characterists = []
-	characterists.append(cn.getShape(img))
+	characterists.append(cn.getShape(coords))
 
-	orientationLine = cn.getOrentationLine(coords)
+	orientationLine = cn.getOrientationLine(coords)
 	characterists.append(getOrientationChara(orientationLine))
 
 	return characterists
 
-
-charaMapping = cvp.getCharacteristiqueMapping()
-
-
-def getVocabulary(img, coordonnates):
+def getVocabulary(coordinnates):
     vocab = []
     characterists = []
-    coords = [Center(x, y) for x, y, _ in coordonnates]
-    groups = [g for _, _, g in coordonnates if g == True]
+    print(coordinnates)
+    coords = [Center(x, y) for x, y, _ in coordinnates]
+    groups = [g for _, _, g in coordinnates if g == True]
+
+    print(groups)
 
     if len(coords) < 3:
         characterists = analyseEasyShape(coords)
     else:
-        characterists = analyseComplexeShape(img, coords)
+        characterists = analyseComplexeShape(coords)
 
     characterists += getSpaceChara(coords)
 
@@ -137,8 +149,10 @@ def getVocabulary(img, coordonnates):
     if len(groups) > 0:
         characterists.append('groupe')
 
-# for c in characterists:
-# 	vocab.append(CHARA_MAPPING[c])
+    for c in characterists:
+        charas = CHARA_MAPPING[c]
+        for ch in charas:
+            vocab.append(ch)
 
     return vocab
 
@@ -167,12 +181,20 @@ def testGetOrientation(n):
         # cn.plt.title("orientation: " + str(orientation))
         # cn.plt.show()
 
-# c1 = (0, 1, 0)
-# c2 = (-1, 0, 0)
-# c3 = (0, 1, 0)
+# c1 = (-0.26, -0.24, 0)
+# c2 = (0.16, -0.25, 0)
+# c3 = (0.26, 0.33, 0)
+# c4 = (-0.35, 0.27, 0)
+# cara = getVocabulary([c1, c2, c3, c4])
+# print(cara)
+
+# selectCharaMapping()
 loadPositions()
-print(positions)
-cara = getVocabulary(IMG_PATH, POSITIONS)
-# print(dist(c1, c2, c3))
-print(cara)
+if len(POSITIONS)>0 :
+    cara = getVocabulary(POSITIONS)
+    # print(dist(c1, c2, c3))
+    print(cara)
+    table.setSize(len(cara), 1)
+    for i, c in enumerate(cara):
+        table[i, 0] = c
 
