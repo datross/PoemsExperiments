@@ -163,9 +163,9 @@ def testGetOrientation(n):
         line = cn.draw.line(p1.x, p1.y, p2.x, p2.y)
         image[line[0], line[1]] = 2.
 
-        cn.plt.imshow(image)
-        cn.plt.title("orientation: " + str(orientation))
-        cn.plt.show()
+        # cn.plt.imshow(image)
+        # cn.plt.title("orientation: " + str(orientation))
+        # cn.plt.show()
 
 # c1 = (0, 1, 0)
 # c2 = (-1, 0, 0)
